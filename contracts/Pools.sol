@@ -29,6 +29,18 @@ contract Pools {
     function getPools(address owner_addr) public view returns (address [] memory) {
         return owner_to_pools[owner_addr];
     }
+
+    /*
+    	TODO:
+    		- allow owner x to send funds to pool 
+    		- trigger multisig for withdrawling from fund 
+    		- select delegate of pool 
+    */
+
+}
+
+contract MultiSigWallet {
+	uint constant public MIN_CONSENT = 1; // 100% agreement upon owners to withdrawl funds 
 }
 
 // contract MultiSigWallet {

@@ -1,11 +1,13 @@
 import { Routes, Route } from "react-router-dom";
 import { Center, Container, Flex } from "@chakra-ui/react"
+import CreatePool from "routes/CreatePool";
 import styles from "routes/index.module.css";
 
 const Pages = () => (
   <Flex justify="center" className={styles.container}>
     <Container maxW="container.lg">
       <Routes>
+        <Route path="/create-pool" element={<CreatePool/>}/>
       </Routes>
     </Container>
   </Flex>

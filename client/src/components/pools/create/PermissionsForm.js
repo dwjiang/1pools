@@ -51,7 +51,7 @@ const PermissionsForm = ({ form }) => {
           onClick={clearAllOwners}>Clear All Owners</Button>
       </HStack>
       <Box border="1px solid" borderRadius="md">
-        <Table variant="simple">
+        <Table variant="striped">
           <TableCaption>
             Every owner will have equal voting rights in this pool. 
             All owners can post updates and call for proposals for transactions. You don't have to be an owner to contribute funds to a pool.

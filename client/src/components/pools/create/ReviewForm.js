@@ -13,7 +13,7 @@ const ReviewForm = ({ data }) => {
     <Stack spacing="1rem" marginTop="2rem">
       <FormLabel>Review Information</FormLabel>
       <Box border="1px solid" borderRadius="md">
-        <Table variant="simple">
+        <Table variant="striped">
           <Thead>
             <Tr>
               <Th colSpan={2}>General Information</Th>
@@ -30,7 +30,7 @@ const ReviewForm = ({ data }) => {
             </Tr>
             <Tr>
               <Td>Goal Amount</Td>
-              <Td>{data.goal ? data.goal : "N/A"}</Td>
+              <Td>{data.goal}</Td>
             </Tr>
             <Tr>
               <Td>Pool End Date</Td>
@@ -44,7 +44,7 @@ const ReviewForm = ({ data }) => {
         </Table>
       </Box>
       <Box border="1px solid" borderRadius="md">
-        <Table variant="simple">
+        <Table variant="striped">
           <Thead>
             <Tr>
               <Th>Owner Name</Th>

@@ -1,4 +1,6 @@
 export const shortenWalletAddress = (text) => {
+  if (!text)
+    return "";
   return text.length > 15 ? `${text.slice(0, 9)}...${text.slice(-4)}` : text;
 }
 

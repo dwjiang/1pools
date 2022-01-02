@@ -17,11 +17,11 @@ const GeneralInfoForm = ({ form }) => {
         <Textarea minHeight="10rem" { ...register("description") } placeholder="Required (Maximum 2000 Characters)"/>
         <FormErrorMessage>{errors?.description?.message}</FormErrorMessage>
       </FormControl>
-      <HStack spacing="1rem">
-        <FormControl isInvalid={errors?.goal?.message} errortext={errors?.goal?.message}>
+      <HStack spacing="1rem" align="flex-start">
+        <FormControl isRequired isInvalid={errors?.goal?.message} errortext={errors?.goal?.message}>
           <FormLabel>Goal Amount ($ONE)</FormLabel>
           <InputGroup>
-            <Input { ...register("goal") } placeholder="Optional (Maximum 15 Characters)"/>
+            <Input { ...register("goal") } placeholder="Required (Maximum 15 Characters)"/>
             <InputRightAddon children="$ONE"/>
           </InputGroup>
           <FormErrorMessage>{errors?.goal?.message}</FormErrorMessage>

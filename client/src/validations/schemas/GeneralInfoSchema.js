@@ -16,8 +16,7 @@ const GeneralInfoSchema = yup.object().shape({
     .integer("Goal amount must be a positive whole number.")
     .max(999999999999999, "Goal amount must be no larger than 15 characters.")
     .typeError("Goal amount must be a positive whole number.")
-    .nullable(true).truncate()
-    .transform((curr_val, orig_val) => orig_val === "" ? null : curr_val),
+    .required("Goal amount is required."),
   end: yup.date("Pool end date must be formatted as a date.")
     .min(tomorrowUTC, `Pool end date must be at least one day after ${tomorrowUTC.format("L")}.`)
     .nullable(true).transform((curr_val, orig_val) => orig_val === "" ? null : curr_val),

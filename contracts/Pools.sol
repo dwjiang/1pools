@@ -1,74 +1,90 @@
 pragma solidity ^0.8.10;
 
 contract Pools {
-    mapping(address => address[]) private pool_to_owners;
-    mapping(address => address[]) private owner_to_pools;
-    mapping(address => bytes) private pool_to_metadata;
+	
+	uint8 constant public NUM_OWNERS_MAXIMUM = 20;
+	
+	enum ProposalConfirmationTypes { UNDECIDED, YES, NO, ABSTAIN }
+	
+	struct Proposal {
+		address payable destination;
+		uint amount;
+		bool executed;
+		bytes data;
+		mapping(address => ProposalConfirmationTypes) confirmations;
+		mapping(ProposalConfirmationTypes => uint) numConfirmations;
+	}
+	
+	address[NUM_OWNERS_MAXIMUM] private owners;
+	uint8 private confirmationsRequired;
+	bytes private metadata;
+	
+	uint private numProposals;
+	mapping(uint => Proposal) private proposals;
 
-	constructor(address _pool_addr, address _owner_addr, bytes memory _metadata) public {
-		/*
-			- constructor takes in owners to create wallet and adds to lookup table then calls multisig wallet
-		*/
-        pool_to_owners[_pool_addr].push(address(_owner_addr));
-        pool_to_metadata[_pool_addr] = _metadata;
-        owner_to_pools[_owner_addr].push(address(_pool_addr));
-	} 
+	constructor(address[NUM_OWNERS_MAXIMUM] memory _owners, uint8 _confirmationsRequired, bytes memory _metadata) {
+		owners = _owners;
+		confirmationsRequired = _confirmationsRequired;
+		metadata = _metadata;
+	}
+	
+	function createProposal(address payable _destination, uint _amount, bytes memory _data) public {
+		Proposal storage proposal = proposals[numProposals++];
+		proposal.destination = _destination;
+		proposal.amount = _amount;
+		proposal.data = _data;
+		proposal.numConfirmations[ProposalConfirmationTypes.UNDECIDED] = owners.length;
+	}
+	
+	function setConfirmation(uint _proposalId, ProposalConfirmationTypes _confirmation) public {
+		proposals[_proposalId].numConfirmations[proposals[_proposalId].confirmations[msg.sender]]--;
+		proposals[_proposalId].confirmations[msg.sender] = _confirmation;
+		proposals[_proposalId].numConfirmations[_confirmation]++;
+	}
+	
+	function executeProposal(uint _proposalId) public {
+		if (proposals[_proposalId].numConfirmations[ProposalConfirmationTypes.YES] >= confirmationsRequired) {
+			proposals[_proposalId].executed = true;
+			proposals[_proposalId].destination.transfer(proposals[_proposalId].amount);
+			(bool success, ) = proposals[_proposalId].destination.call{value: proposals[_proposalId].amount}(proposals[_proposalId].data);
+			if (!success) {
+				proposals[_proposalId].executed = false;
+			} else {
+				
+			}
+		}
+	}
 
-    function addOwner(address pool_addr, address [] memory owners_addr) public {
-        for (uint i = 0; i < owners_addr.length; i++) {
-            pool_to_owners[pool_addr].push(owners_addr[i]);
-            owner_to_pools[owners_addr[i]].push(pool_addr);
-        }
-    }
-
-    // getters 
-    function getOwners(address pool_addr) public view returns (address [] memory) {
-        return pool_to_owners[pool_addr];
-    }
-
-    function getPools(address owner_addr) public view returns (address [] memory) {
-        return owner_to_pools[owner_addr];
-    }
-
-    /*
-    	TODO:
-    		- allow owner x to send funds to pool 
-    		- trigger multisig for withdrawling from fund 
-    		- select delegate of pool 
-    */
-
-}
-
-contract MultiSigWallet {
-	uint constant public MIN_CONSENT = 1; // 100% agreement upon owners to withdrawl funds 
-}
-
-// contract MultiSigWallet {
-// 	function submitTransaction() {
-// 		/*
-// 			owner will propose a transaction subject to approval by other owners
-// 		*/
-
-// 	}
-
-// 	function confirmTransaction() {
+	// getters 
+	function getNumOwners() public view returns (uint) {
+		return owners.length;
+	}
+	
+	function getOwners() public view returns (address[NUM_OWNERS_MAXIMUM] memory) {
+		return owners;
+	}
+	
+	function getNumProposals() public view returns (uint) {
+		return numProposals;
+	}
+	
+	function getOwnerConfirmation(uint _proposalId, address _owner) public view returns (ProposalConfirmationTypes) {
+		return proposals[_proposalId].confirmations[_owner];
+	}
+	
+	function getProposalNumConfirmations(uint _proposalId, ProposalConfirmationTypes _proposalConfirmationTypes) public view returns (uint) {
+		return proposals[_proposalId].numConfirmations[_proposalConfirmationTypes];
+	}
 		
-// 			other owners can approve or deny the transaction proposal 
+	function getProposal(uint _proposalId) public view returns (address, uint, bool) {
+		return (proposals[_proposalId].destination, proposals[_proposalId].amount, proposals[_proposalId].executed);
+	}
 		
-
-// 	}
-
-// 	function executeTransaction() {
-// 		/*
-// 			if enough owners approve the transaction, it will be executed 
-// 		*/
-
-// 	}
-
-// 	function revokeConfirmation() {
-// 		/*
-// 			allow an owner to cancel the confirmation  
-// 		*/
-
-// 	}
-// }
+	function getConfirmationsRequired() public view returns (uint) {
+		return confirmationsRequired;
+	}
+	
+	function getMetadata() public view returns (bytes memory) {
+		return metadata;
+	}
+}

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
 contract Pools {
@@ -37,18 +38,20 @@ contract Pools {
 	}
 	
 	function setConfirmation(uint _proposalId, ProposalConfirmationTypes _confirmation) public {
-		proposals[_proposalId].numConfirmations[proposals[_proposalId].confirmations[msg.sender]]--;
-		proposals[_proposalId].confirmations[msg.sender] = _confirmation;
-		proposals[_proposalId].numConfirmations[_confirmation]++;
+    Proposal storage proposal = proposals[_proposalId];
+		proposal.numConfirmations[proposal.confirmations[msg.sender]]--;
+		proposal.confirmations[msg.sender] = _confirmation;
+		proposal.numConfirmations[_confirmation]++;
 	}
 	
 	function executeProposal(uint _proposalId) public {
-		if (proposals[_proposalId].numConfirmations[ProposalConfirmationTypes.YES] >= confirmationsRequired) {
-			proposals[_proposalId].executed = true;
-			proposals[_proposalId].destination.transfer(proposals[_proposalId].amount);
-			(bool success, ) = proposals[_proposalId].destination.call{value: proposals[_proposalId].amount}(proposals[_proposalId].data);
+    Proposal storage proposal = proposals[_proposalId];
+		if (proposal.numConfirmations[ProposalConfirmationTypes.YES] >= confirmationsRequired) {
+			proposal.executed = true;
+			proposal.destination.transfer(proposal.amount);
+			(bool success, ) = proposal.destination.call{value: proposal.amount}(proposal.data);
 			if (!success) {
-				proposals[_proposalId].executed = false;
+				proposal.executed = false;
 			} else {
 				
 			}
@@ -69,15 +72,18 @@ contract Pools {
 	}
 	
 	function getOwnerConfirmation(uint _proposalId, address _owner) public view returns (ProposalConfirmationTypes) {
-		return proposals[_proposalId].confirmations[_owner];
+    Proposal storage proposal = proposals[_proposalId];
+		return proposal.confirmations[_owner];
 	}
 	
 	function getProposalNumConfirmations(uint _proposalId, ProposalConfirmationTypes _proposalConfirmationTypes) public view returns (uint) {
-		return proposals[_proposalId].numConfirmations[_proposalConfirmationTypes];
+    Proposal storage proposal = proposals[_proposalId];
+		return proposal.numConfirmations[_proposalConfirmationTypes];
 	}
 		
 	function getProposal(uint _proposalId) public view returns (address, uint, bool) {
-		return (proposals[_proposalId].destination, proposals[_proposalId].amount, proposals[_proposalId].executed);
+    Proposal storage proposal = proposals[_proposalId];
+		return (proposal.destination, proposal.amount, proposal.executed);
 	}
 		
 	function getConfirmationsRequired() public view returns (uint) {

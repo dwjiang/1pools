@@ -17,20 +17,27 @@ contract Pools {
 	}
 	
 	address[NUM_OWNERS_MAXIMUM] private owners;
+	mapping(address => bool) private isOwner;
+
 	uint8 private confirmationsRequired;
 	bytes private metadata;
 	
 	uint private numProposals;
 	mapping(uint => Proposal) private proposals;
+	mapping(uint => bool) private isProposal;
 
 	constructor(address[NUM_OWNERS_MAXIMUM] memory _owners, uint8 _confirmationsRequired, bytes memory _metadata) {
 		owners = _owners;
 		confirmationsRequired = _confirmationsRequired;
 		metadata = _metadata;
+		for(uint i = 0; i < _owners.length; i++) {
+			isOwner[_owners[i]] = true;
+		}
 	}
 	
 	function createProposal(address payable _destination, uint _amount, bytes memory _data) public {
 		Proposal storage proposal = proposals[numProposals++];
+		isProposal[numProposals++] = true;
 		proposal.destination = _destination;
 		proposal.amount = _amount;
 		proposal.data = _data;
@@ -92,5 +99,27 @@ contract Pools {
 	
 	function getMetadata() public view returns (bytes memory) {
 		return metadata;
+	}
+
+	// modifiers 
+	modifier validNumOfOwners(uint _ownerCount) {
+		require(_ownerCount <= NUM_OWNERS_MAXIMUM
+			&& _ownerCount != 0);
+		_;
+	}
+
+	modifier validConfirmationsRequired(uint _confirmationsRequired) {
+		require(_confirmationsRequired >= 0);
+		_;
+	}
+
+	modifier proposalExists(uint _proposalId) {
+		require(isProposal[_proposalId]);
+		_;
+	}
+
+	modifier ownerExists(address _owner) {
+		require(isOwner[_owner]);
+		_;
 	}
 }

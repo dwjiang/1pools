@@ -26,7 +26,10 @@ contract Pools {
 	mapping(uint => Proposal) private proposals;
 	mapping(uint => bool) private isProposal;
 
-	constructor(address[NUM_OWNERS_MAXIMUM] memory _owners, uint8 _confirmationsRequired, bytes memory _metadata) {
+	constructor(address[NUM_OWNERS_MAXIMUM] memory _owners, uint8 _confirmationsRequired, bytes memory _metadata) 
+		validNumOfOwners(_owners.length)
+		validConfirmationsRequired(_confirmationsRequired)
+	{
 		owners = _owners;
 		confirmationsRequired = _confirmationsRequired;
 		metadata = _metadata;
@@ -45,14 +48,17 @@ contract Pools {
 	}
 	
 	function setConfirmation(uint _proposalId, ProposalConfirmationTypes _confirmation) public {
-    Proposal storage proposal = proposals[_proposalId];
+    	Proposal storage proposal = proposals[_proposalId];
 		proposal.numConfirmations[proposal.confirmations[msg.sender]]--;
 		proposal.confirmations[msg.sender] = _confirmation;
 		proposal.numConfirmations[_confirmation]++;
 	}
 	
-	function executeProposal(uint _proposalId) public {
-    Proposal storage proposal = proposals[_proposalId];
+	function executeProposal(uint _proposalId) 
+		public 
+		proposalExists(_proposalId)
+	{
+    	Proposal storage proposal = proposals[_proposalId];
 		if (proposal.numConfirmations[ProposalConfirmationTypes.YES] >= confirmationsRequired) {
 			proposal.executed = true;
 			proposal.destination.transfer(proposal.amount);

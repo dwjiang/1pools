@@ -60,7 +60,10 @@ contract Pools {
 		}
 	}
 	
-	function createProposal(address payable _destination, uint _amount, bytes memory _data) public {
+	function createProposal(address payable _destination, uint _amount, bytes memory _data) 
+		public
+		ownerExists(msg.sender)
+	{
 		Proposal storage proposal = proposals[numProposals++];
 		isProposal[numProposals++] = true;
 		proposal.destination = _destination;
@@ -69,7 +72,10 @@ contract Pools {
 		proposal.numConfirmations[ProposalConfirmationTypes.UNDECIDED] = owners.length;
 	}
 	
-	function setConfirmation(uint _proposalId, ProposalConfirmationTypes _confirmation) public {
+	function setConfirmation(uint _proposalId, ProposalConfirmationTypes _confirmation) 
+		public 
+		ownerExists(msg.sender)
+	{
     	Proposal storage proposal = proposals[_proposalId];
 		proposal.numConfirmations[proposal.confirmations[msg.sender]]--;
 		proposal.confirmations[msg.sender] = _confirmation;
@@ -79,6 +85,7 @@ contract Pools {
 	function executeProposal(uint _proposalId) 
 		public 
 		proposalExists(_proposalId)
+		ownerExists(msg.sender)
 	{
     	Proposal storage proposal = proposals[_proposalId];
 		if (proposal.numConfirmations[ProposalConfirmationTypes.YES] >= confirmationsRequired) {

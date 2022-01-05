@@ -26,6 +26,28 @@ contract Pools {
 	mapping(uint => Proposal) private proposals;
 	mapping(uint => bool) private isProposal;
 
+	// modifiers 
+	modifier validNumOfOwners(uint _ownerCount) {
+		require(_ownerCount <= NUM_OWNERS_MAXIMUM
+			&& _ownerCount != 0);
+		_;
+	}
+
+	modifier validConfirmationsRequired(uint _confirmationsRequired) {
+		require(_confirmationsRequired >= 0);
+		_;
+	}
+
+	modifier proposalExists(uint _proposalId) {
+		require(isProposal[_proposalId]);
+		_;
+	}
+
+	modifier ownerExists(address _owner) {
+		require(isOwner[_owner]);
+		_;
+	}
+
 	constructor(address[NUM_OWNERS_MAXIMUM] memory _owners, uint8 _confirmationsRequired, bytes memory _metadata) 
 		validNumOfOwners(_owners.length)
 		validConfirmationsRequired(_confirmationsRequired)
@@ -105,27 +127,5 @@ contract Pools {
 	
 	function getMetadata() public view returns (bytes memory) {
 		return metadata;
-	}
-
-	// modifiers 
-	modifier validNumOfOwners(uint _ownerCount) {
-		require(_ownerCount <= NUM_OWNERS_MAXIMUM
-			&& _ownerCount != 0);
-		_;
-	}
-
-	modifier validConfirmationsRequired(uint _confirmationsRequired) {
-		require(_confirmationsRequired >= 0);
-		_;
-	}
-
-	modifier proposalExists(uint _proposalId) {
-		require(isProposal[_proposalId]);
-		_;
-	}
-
-	modifier ownerExists(address _owner) {
-		require(isOwner[_owner]);
-		_;
 	}
 }

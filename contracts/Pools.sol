@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.7;
 
 contract Pools {
 	
-	uint8 constant public NUM_OWNERS_MAXIMUM = 20;
 	
 	enum ProposalConfirmationTypes { UNDECIDED, YES, NO, ABSTAIN }
 	
@@ -16,11 +15,11 @@ contract Pools {
 		mapping(ProposalConfirmationTypes => uint) numConfirmations;
 	}
 	
-	address[NUM_OWNERS_MAXIMUM] private owners;
+	address[] private owners;
 	mapping(address => bool) private isOwner;
 
 	uint8 private confirmationsRequired;
-	bytes private metadata;
+	string private metadata;
 	
 	uint private numProposals;
 	mapping(uint => Proposal) private proposals;
@@ -28,8 +27,7 @@ contract Pools {
 
 	// modifiers 
 	modifier validNumOfOwners(uint _ownerCount) {
-		require(_ownerCount <= NUM_OWNERS_MAXIMUM
-			&& _ownerCount != 0);
+		require(_ownerCount != 0);
 		_;
 	}
 
@@ -48,10 +46,12 @@ contract Pools {
 		_;
 	}
 
-	constructor(address[NUM_OWNERS_MAXIMUM] memory _owners, uint8 _confirmationsRequired, bytes memory _metadata) 
+	constructor(address[] memory _owners, uint8 _confirmationsRequired, string memory _metadata) 
+
 		validNumOfOwners(_owners.length)
 		validConfirmationsRequired(_confirmationsRequired)
 	{
+        // require(_owners[0] == msg.sender);
 		owners = _owners;
 		confirmationsRequired = _confirmationsRequired;
 		metadata = _metadata;
@@ -65,7 +65,7 @@ contract Pools {
 		ownerExists(msg.sender)
 	{
 		Proposal storage proposal = proposals[numProposals++];
-		isProposal[numProposals++] = true;
+		isProposal[numProposals] = true;
 		proposal.destination = _destination;
 		proposal.amount = _amount;
 		proposal.data = _data;
@@ -105,7 +105,7 @@ contract Pools {
 		return owners.length;
 	}
 	
-	function getOwners() public view returns (address[NUM_OWNERS_MAXIMUM] memory) {
+	function getOwners() public view returns (address[] memory) {
 		return owners;
 	}
 	
@@ -132,7 +132,7 @@ contract Pools {
 		return confirmationsRequired;
 	}
 	
-	function getMetadata() public view returns (bytes memory) {
+	function getMetadata() public view returns (string memory) {
 		return metadata;
 	}
 }

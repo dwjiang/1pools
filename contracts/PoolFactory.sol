@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.7;
 import "./Pools.sol";
 
 contract PoolFactory {
@@ -11,10 +11,15 @@ contract PoolFactory {
 		return instantiations[_creator].length;
 	}
 
-	function createPool(address[20] memory _owners, uint8 _confirmationsRequired, bytes memory _metadata) public returns (address poolContractAddress){
-		poolContractAddress = address(new Pools(_owners, _confirmationsRequired, _metadata));
+    function getInstantiations(address _creator) public view returns(address[] memory) {
+		return instantiations[_creator];
+	}
+
+	function createPool(address[] memory _owners, uint8 _confirmationsRequired, string memory _metadata) public payable returns (address){
+		address poolContractAddress = address(new Pools(_owners, _confirmationsRequired, _metadata));
 		isInstantiated[poolContractAddress] = true;
 		instantiations[msg.sender].push(poolContractAddress);
+        return poolContractAddress;
 	}
 
 }

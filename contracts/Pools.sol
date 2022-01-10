@@ -8,6 +8,7 @@ contract Pools {
 	
 	struct Proposal {
 		address payable destination;
+		address creator;
 		uint amount;
 		bool executed;
 		bytes data;
@@ -81,14 +82,14 @@ contract Pools {
 		proposal.amount = _amount;
 		proposal.data = _data;
 		proposal.numConfirmations[ProposalConfirmationTypes.UNDECIDED] = owners.length;
-		proposalCreator = msg.sender;
+		proposal.creator = msg.sender;
 	}
 	
 	function setConfirmation(uint _proposalId, ProposalConfirmationTypes _confirmation) 
 		public 
 		ownerExists(msg.sender)
 	{
-    	Proposal storage proposal = proposals[_proposalId];
+    Proposal storage proposal = proposals[_proposalId];
 		proposal.numConfirmations[proposal.confirmations[msg.sender]]--;
 		proposal.confirmations[msg.sender] = _confirmation;
 		proposal.numConfirmations[_confirmation]++;
@@ -99,15 +100,13 @@ contract Pools {
 		proposalExists(_proposalId)
 		ownerExists(msg.sender)
 	{
-    	Proposal storage proposal = proposals[_proposalId];
+    Proposal storage proposal = proposals[_proposalId];
 		if (proposal.numConfirmations[ProposalConfirmationTypes.YES] >= confirmationsRequired) {
 			proposal.executed = true;
 			proposal.destination.transfer(proposal.amount);
 			(bool success, ) = proposal.destination.call{value: proposal.amount}(proposal.data);
 			if (!success) {
 				proposal.executed = false;
-			} else {
-				
 			}
 		}
 	}
@@ -156,8 +155,9 @@ contract Pools {
 		return metadata;
 	}
 
-	function getProposalCreator() public returns (address) {
-		emit proposalCreatedBy(proposalCreator);
-		return proposalCreator;
+	function getProposalCreator(uint _proposalId) public returns (address) {
+		Proposal storage proposal = proposals[_proposalId];
+		emit proposalCreatedBy(proposal.creator);
+		return proposal.creator;
 	}
 }

@@ -7,7 +7,7 @@ contract PoolFactory {
 	mapping(address => bool) public isInstantiated;
 	mapping(address => address[]) public instantiations;
 	address[] public allPoolInstantiations;
-	address public poolCreator; 
+	mapping(address => address) poolCreator; //mapping of pool address to creator address
 
 	event instantiationCount(address _creator);
 	event instantiationsOfCreator(address _creator);
@@ -31,21 +31,21 @@ contract PoolFactory {
 		return allPoolInstantiations;
 	}
 
-	function getCreator() public returns(address) {
-		emit createdBy(poolCreator);
-		return poolCreator;
+	function getCreator(address _poolAddress) public returns(address) {
+		emit createdBy(poolCreator[_poolAddress]);
+		return poolCreator[_poolAddress];
 	}
  
 	function createPool(address[] memory _owners, uint8 _confirmationsRequired, string memory _metadata) public payable returns (address) {
 		address poolContractAddress = address(new Pools(_owners, _confirmationsRequired, _metadata));
 		isInstantiated[poolContractAddress] = true;
 		allPoolInstantiations.push(poolContractAddress);
-		poolCreator = msg.sender;
+		poolCreator[poolContractAddress] = msg.sender;
 		for(uint i = 0; i < _owners.length; i++) {
 			instantiations[_owners[i]].push(poolContractAddress);
 		}
 		emit poolAddress(poolContractAddress, _owners, _confirmationsRequired);
-        return poolContractAddress;
+		return poolContractAddress;
 	}
 
 }

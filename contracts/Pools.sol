@@ -25,7 +25,6 @@ contract Pools {
 	uint private numProposals;
 	mapping(uint => Proposal) private proposals;
 	mapping(uint => bool) private isProposal;
-	address proposalCreator;
 
 	event ownersCount(uint _count);
 	event getAllOwners(address[] _owners);

@@ -15,12 +15,12 @@ The current smart contract follows a factory pattern with an underlying multisig
 To try out the smart contracts, one can use an online solidity IDE: [**remix**](https://remix.ethereum.org/). Note: to use the pool created from `PoolFactory.sol` one would have to use that pool address upon deploying `Pools.sol` 
 <br></br>
 Deploy to testnet using Truffle:
-1. install harmony packages 
+1. install harmony dependencies 
 ```
 npm install --save @harmony-js/core
-npm install --save @harmony-js/core
-npm install --save @harmony-js/core
 npm install --save @harmony-js/utils
+npm install --save tslib
+npm install --save dotenv
 ```
 2. download harmony one wallet chrome extension and create `.env` with mnemonic and private key, for more information check out [harmony one documentation](https://docs.harmony.one/home/developers/deploying-on-harmony/truffle/setup)
 3. edit `truffle-config.js` and set the appropriate version number for the compilers block. 

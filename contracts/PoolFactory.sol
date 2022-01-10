@@ -8,15 +8,24 @@ contract PoolFactory {
 	mapping(address => address[]) public instantiations;
 	address[] public allPoolInstantiations; 
 
-	function getInstantiationCount(address _creator) public view returns(uint) {
+	event instantiationCount(address _creator);
+	event instantiationsOfCreator(address _creator);
+	event allCreatedPools(address[] _allPoolInstantiations);
+	event poolAddress(address _poolAddress, address[] _owners, uint8 _confirmations);
+
+
+	function getInstantiationCount(address _creator) public returns(uint) {
+		emit instantiationCount(_creator);
 		return instantiations[_creator].length;
 	}
 
-    function getInstantiations(address _creator) public view returns(address[] memory) {
+    function getInstantiations(address _creator) public returns(address[] memory) {
+		emit instantiationsOfCreator(_creator);
 		return instantiations[_creator];
 	}
 
-	function getAllPoolInstantiations() public view returns(address[] memory) {
+	function getAllPoolInstantiations() public returns(address[] memory) {
+		emit allCreatedPools(allPoolInstantiations);
 		return allPoolInstantiations;
 	}
  
@@ -27,6 +36,7 @@ contract PoolFactory {
 		for(uint i = 0; i < _owners.length; i++) {
 			instantiations[_owners[i]].push(poolContractAddress);
 		}
+		emit poolAddress(poolContractAddress, _owners, _confirmationsRequired);
         return poolContractAddress;
 	}
 

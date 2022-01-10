@@ -25,7 +25,16 @@ contract Pools {
 	mapping(uint => Proposal) private proposals;
 	mapping(uint => bool) private isProposal;
 
-	// modifiers 
+	event ownersCount(uint _count);
+	event getAllOwners(address[] _owners);
+	event proposalCount(uint _count);
+	event ownerConfirmationTypes(ProposalConfirmationTypes _confirmationTypes);
+	event proposalConfirmationCount(uint _count);
+	event proposalInfo(address _destionation, uint _amount, bool _executed);
+	event confirmationRequiredCount(uint _count);
+	event metadataInfo(string _metadata);
+
+
 	modifier validNumOfOwners(uint _ownerCount) {
 		require(_ownerCount != 0);
 		_;
@@ -101,38 +110,46 @@ contract Pools {
 	}
 
 	// getters 
-	function getNumOwners() public view returns (uint) {
+	function getNumOwners() public returns (uint) {
+		emit ownersCount(owners.length);
 		return owners.length;
 	}
 	
-	function getOwners() public view returns (address[] memory) {
+	function getOwners() public returns (address[] memory) {
+		emit getAllOwners(owners);
 		return owners;
 	}
 	
-	function getNumProposals() public view returns (uint) {
+	function getNumProposals() public returns (uint) {
+		emit proposalCount(numProposals);
 		return numProposals;
 	}
 	
-	function getOwnerConfirmation(uint _proposalId, address _owner) public view returns (ProposalConfirmationTypes) {
-    Proposal storage proposal = proposals[_proposalId];
+	function getOwnerConfirmation(uint _proposalId, address _owner) public returns (ProposalConfirmationTypes) {
+		Proposal storage proposal = proposals[_proposalId];
+		emit ownerConfirmationTypes(proposal.confirmations[_owner]);
 		return proposal.confirmations[_owner];
 	}
 	
-	function getProposalNumConfirmations(uint _proposalId, ProposalConfirmationTypes _proposalConfirmationTypes) public view returns (uint) {
-    Proposal storage proposal = proposals[_proposalId];
+	function getProposalNumConfirmations(uint _proposalId, ProposalConfirmationTypes _proposalConfirmationTypes) public returns (uint) {
+		Proposal storage proposal = proposals[_proposalId];
+		emit proposalConfirmationCount(proposal.numConfirmations[_proposalConfirmationTypes]);
 		return proposal.numConfirmations[_proposalConfirmationTypes];
 	}
 		
-	function getProposal(uint _proposalId) public view returns (address, uint, bool) {
-    Proposal storage proposal = proposals[_proposalId];
+	function getProposal(uint _proposalId) public returns (address, uint, bool) {
+		Proposal storage proposal = proposals[_proposalId];
+		emit proposalInfo(proposal.destination, proposal.amount, proposal.executed);
 		return (proposal.destination, proposal.amount, proposal.executed);
 	}
 		
-	function getConfirmationsRequired() public view returns (uint) {
+	function getConfirmationsRequired() public returns (uint) {
+		emit confirmationRequiredCount(confirmationsRequired);
 		return confirmationsRequired;
 	}
 	
-	function getMetadata() public view returns (string memory) {
+	function getMetadata() public returns (string memory) {
+		emit metadataInfo(metadata);
 		return metadata;
 	}
 }

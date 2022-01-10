@@ -24,6 +24,7 @@ contract Pools {
 	uint private numProposals;
 	mapping(uint => Proposal) private proposals;
 	mapping(uint => bool) private isProposal;
+	address proposalCreator;
 
 	event ownersCount(uint _count);
 	event getAllOwners(address[] _owners);
@@ -33,6 +34,7 @@ contract Pools {
 	event proposalInfo(address _destionation, uint _amount, bool _executed);
 	event confirmationRequiredCount(uint _count);
 	event metadataInfo(string _metadata);
+	event proposalCreatedBy(address _creator);
 
 
 	modifier validNumOfOwners(uint _ownerCount) {
@@ -79,6 +81,7 @@ contract Pools {
 		proposal.amount = _amount;
 		proposal.data = _data;
 		proposal.numConfirmations[ProposalConfirmationTypes.UNDECIDED] = owners.length;
+		proposalCreator = msg.sender;
 	}
 	
 	function setConfirmation(uint _proposalId, ProposalConfirmationTypes _confirmation) 
@@ -151,5 +154,10 @@ contract Pools {
 	function getMetadata() public returns (string memory) {
 		emit metadataInfo(metadata);
 		return metadata;
+	}
+
+	function getProposalCreator() public returns (address) {
+		emit proposalCreatedBy(proposalCreator);
+		return proposalCreator;
 	}
 }

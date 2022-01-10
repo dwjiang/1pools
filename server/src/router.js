@@ -1,6 +1,7 @@
 const commentsController = require("./controllers/commentsController");
 const updatesController = require("./controllers/updatesController");
 const walletsController = require("./controllers/walletsController");
+const filesController = require("./controllers/filesController");
 const errorHandler = require("./utils/errorHandler");
 
 module.exports = (app) => {
@@ -13,6 +14,8 @@ module.exports = (app) => {
   app.post("/api/updates/create/:pool", errorHandler.asyncWrapper(updatesController.create));
   
   app.get("/api/wallets/find/:id", errorHandler.asyncWrapper(walletsController.find));
+  
+  app.post("/api/files/metadata", errorHandler.asyncWrapper(filesController.uploadMetadata));
   
   app.use(errorHandler.errorHandler);
 };

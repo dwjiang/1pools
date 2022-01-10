@@ -1,5 +1,7 @@
-const MAX_UNSIGNED_INT = 4294967295;
+const PINATA_URL_BASE = "https://api.pinata.cloud";
+const PINATA_URL_PINNING_API = `${PINATA_URL_BASE}/pinning`;
 
 module.exports = {
-  MAX_UNSIGNED_INT,
+  PINATA_URL_BASE,
+  PINATA_URL_PINNING_API,
 };

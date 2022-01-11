@@ -8,7 +8,6 @@ const findAll = async (req, res) => {
   res.status(200).json(response);
 }
 
-// need to check if address is owner
 const create = async (req, res) => {
   const { pool } = req.params;
   const { signature, message, address } = req.query;

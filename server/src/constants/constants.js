@@ -1,7 +1,9 @@
 const PINATA_URL_BASE = "https://api.pinata.cloud";
 const PINATA_URL_PINNING_API = `${PINATA_URL_BASE}/pinning`;
+const POOLS_FACTORY_ADDRESS = "0xb3d89017fe2e5db724f01adf3d6b0258248903d7";
 
 module.exports = {
   PINATA_URL_BASE,
   PINATA_URL_PINNING_API,
+  POOLS_FACTORY_ADDRESS,
 };

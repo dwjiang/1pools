@@ -88,11 +88,20 @@ const Header = () => {
   }
   
   const copyWalletToClipboard = async () => {
-    if (state.walletAddress) {
+    try {
+      if (!state.walletAddress)
+        throw new Error();
       await Utils.copyToClipboard(state.walletAddress);
       toast({
         title: "Wallet address copied to clipboard",
         status: "success",
+        isClosable: true,
+        position: "bottom-right",
+      });
+    } catch (error) {
+      toast({
+        title: "Error copying wallet address to clipboard",
+        status: "error",
         isClosable: true,
         position: "bottom-right",
       });
@@ -107,10 +116,7 @@ const Header = () => {
             className={styles["header-logo"]}>🏊</Link>
           <Link href="/" fontSize="2xl"
             className={styles["header-logo"]}><strong>1Pools</strong></Link>
-          <Link href="/explore" className={styles["header-link"]}>
-            <Text as="u"><strong>Explore</strong></Text>
-          </Link>
-          <Link href="/my-pools" className={styles["header-link"]}>
+          <Link href="/pools" className={styles["header-link"]}>
             <Text as="u"><strong>My Pools</strong></Text>
           </Link>
           <Link href="/create-pool" className={styles["header-link"]}>

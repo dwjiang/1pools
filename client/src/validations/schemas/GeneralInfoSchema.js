@@ -1,7 +1,5 @@
 import yup from "validations/validations";
-import moment from "moment";
 
-const tomorrowUTC = moment.utc().add(1, "days");
 const GeneralInfoSchema = yup.object().shape({
   name: yup.string("Pool name must be a string.")
     .min(5, "Pool name must be at least than 5 characters long.")
@@ -17,9 +15,12 @@ const GeneralInfoSchema = yup.object().shape({
     .max(999999999999999, "Goal amount must be no larger than 15 characters.")
     .typeError("Goal amount must be a positive whole number.")
     .required("Goal amount is required."),
-  end: yup.date("Pool end date must be formatted as a date.")
-    .min(tomorrowUTC, `Pool end date must be at least one day after ${tomorrowUTC.format("L")}.`)
-    .nullable(true).transform((curr_val, orig_val) => orig_val === "" ? null : curr_val),
+  end: yup.number("Pool duration must be a positive whole number.")
+    .positive("Pool duration must be a positive whole number.")
+    .integer("Pool duration must be a positive whole number.")
+    .min(1, "Pool duration must be at least one day")
+    .typeError("Pool duration must be a positive whole number.")
+    .required("Pool duration is required."),
 });
 
 export default GeneralInfoSchema;

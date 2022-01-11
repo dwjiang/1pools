@@ -7,6 +7,7 @@ contract Pools {
 	enum ProposalConfirmationTypes { UNDECIDED, YES, NO, ABSTAIN }
 	
 	struct Proposal {
+		uint256 creationTime;
 		address payable destination;
 		address creator;
 		uint amount;
@@ -21,21 +22,13 @@ contract Pools {
 
 	uint8 private confirmationsRequired;
 	string private metadata;
-	
+
+	uint256 private poolTTL; //current pool's time to live measured by days
+	uint256 private poolCreationTime;
+
 	uint private numProposals;
 	mapping(uint => Proposal) private proposals;
 	mapping(uint => bool) private isProposal;
-
-	event ownersCount(uint _count);
-	event getAllOwners(address[] _owners);
-	event proposalCount(uint _count);
-	event ownerConfirmationTypes(ProposalConfirmationTypes _confirmationTypes);
-	event proposalConfirmationCount(uint _count);
-	event proposalInfo(address _destionation, uint _amount, bool _executed);
-	event confirmationRequiredCount(uint _count);
-	event metadataInfo(string _metadata);
-	event proposalCreatedBy(address _creator);
-
 
 	modifier validNumOfOwners(uint _ownerCount) {
 		require(_ownerCount != 0);
@@ -47,6 +40,16 @@ contract Pools {
 		_;
 	}
 
+	modifier validTTL(uint256 _ttl) {
+		require(_ttl > 0);
+		_;
+	}
+
+	modifier validPoolTimeWindow() {
+		require(block.timestamp > (poolTTL * 24 * 60 * 60 + poolCreationTime));
+		_;
+	}
+
 	modifier proposalExists(uint _proposalId) {
 		require(isProposal[_proposalId]);
 		_;
@@ -55,17 +58,20 @@ contract Pools {
 	modifier ownerExists(address _owner) {
 		require(isOwner[_owner]);
 		_;
-	}
+	} 
 
-	constructor(address[] memory _owners, uint8 _confirmationsRequired, string memory _metadata) 
+	constructor(address[] memory _owners, uint8 _confirmationsRequired, string memory _metadata, uint256 _ttl) 
 
 		validNumOfOwners(_owners.length)
 		validConfirmationsRequired(_confirmationsRequired)
+		validTTL(_ttl)
 	{
-        // require(_owners[0] == msg.sender);
 		owners = _owners;
 		confirmationsRequired = _confirmationsRequired;
 		metadata = _metadata;
+		poolTTL = _ttl;
+		poolCreationTime = block.timestamp;
+
 		for(uint i = 0; i < _owners.length; i++) {
 			isOwner[_owners[i]] = true;
 		}
@@ -74,6 +80,7 @@ contract Pools {
 	function createProposal(address payable _destination, uint _amount, bytes memory _data) 
 		public
 		ownerExists(msg.sender)
+		validPoolTimeWindow()
 	{
 		Proposal storage proposal = proposals[numProposals++];
 		isProposal[numProposals] = true;
@@ -82,24 +89,25 @@ contract Pools {
 		proposal.data = _data;
 		proposal.numConfirmations[ProposalConfirmationTypes.UNDECIDED] = owners.length;
 		proposal.creator = msg.sender;
+		proposal.creationTime = block.timestamp;
 	}
 	
 	function setConfirmation(uint _proposalId, ProposalConfirmationTypes _confirmation) 
-		public 
+		public payable
 		ownerExists(msg.sender)
 	{
-    Proposal storage proposal = proposals[_proposalId];
+		Proposal storage proposal = proposals[_proposalId];
 		proposal.numConfirmations[proposal.confirmations[msg.sender]]--;
 		proposal.confirmations[msg.sender] = _confirmation;
 		proposal.numConfirmations[_confirmation]++;
 	}
 	
 	function executeProposal(uint _proposalId) 
-		public 
+		public payable
 		proposalExists(_proposalId)
 		ownerExists(msg.sender)
 	{
-    Proposal storage proposal = proposals[_proposalId];
+		Proposal storage proposal = proposals[_proposalId];
 		if (proposal.numConfirmations[ProposalConfirmationTypes.YES] >= confirmationsRequired) {
 			proposal.executed = true;
 			proposal.destination.transfer(proposal.amount);
@@ -109,54 +117,57 @@ contract Pools {
 			}
 		}
 	}
-
 	// getters 
-	function getNumOwners() public returns (uint) {
-		emit ownersCount(owners.length);
+	function getNumOwners() public view returns (uint) {
 		return owners.length;
 	}
 	
-	function getOwners() public returns (address[] memory) {
-		emit getAllOwners(owners);
+	function getOwners() public view returns (address[] memory) {
 		return owners;
 	}
 	
-	function getNumProposals() public returns (uint) {
-		emit proposalCount(numProposals);
+	function getNumProposals() public view returns (uint) {
 		return numProposals;
 	}
 	
-	function getOwnerConfirmation(uint _proposalId, address _owner) public returns (ProposalConfirmationTypes) {
+	function getOwnerConfirmation(uint _proposalId, address _owner) public view returns (ProposalConfirmationTypes) {
 		Proposal storage proposal = proposals[_proposalId];
-		emit ownerConfirmationTypes(proposal.confirmations[_owner]);
 		return proposal.confirmations[_owner];
 	}
 	
-	function getProposalNumConfirmations(uint _proposalId, ProposalConfirmationTypes _proposalConfirmationTypes) public returns (uint) {
+	function getProposalNumConfirmations(uint _proposalId, ProposalConfirmationTypes _proposalConfirmationTypes) public view returns (uint) {
 		Proposal storage proposal = proposals[_proposalId];
-		emit proposalConfirmationCount(proposal.numConfirmations[_proposalConfirmationTypes]);
 		return proposal.numConfirmations[_proposalConfirmationTypes];
 	}
 		
-	function getProposal(uint _proposalId) public returns (address, uint, bool) {
+	function getProposal(uint _proposalId) public view returns (address, uint, bool) {
 		Proposal storage proposal = proposals[_proposalId];
-		emit proposalInfo(proposal.destination, proposal.amount, proposal.executed);
 		return (proposal.destination, proposal.amount, proposal.executed);
 	}
+
+	function getProposalCreatedTime(uint _proposalId) public view returns (uint256) {
+		Proposal storage proposal = proposals[_proposalId];
+		return proposal.creationTime;
+	}
 		
-	function getConfirmationsRequired() public returns (uint) {
-		emit confirmationRequiredCount(confirmationsRequired);
+	function getConfirmationsRequired() public view returns (uint) {
 		return confirmationsRequired;
 	}
 	
-	function getMetadata() public returns (string memory) {
-		emit metadataInfo(metadata);
+	function getMetadata() public view returns (string memory) {
 		return metadata;
 	}
 
-	function getProposalCreator(uint _proposalId) public returns (address) {
+	function getProposalCreator(uint _proposalId) public view returns (address) {
 		Proposal storage proposal = proposals[_proposalId];
-		emit proposalCreatedBy(proposal.creator);
 		return proposal.creator;
+	}
+
+	function getPoolCreatedTime() public view returns(uint256) {
+		return poolCreationTime;
+	}
+
+	function getPoolTTL() public view returns(uint256) {
+		return poolTTL;
 	}
 }

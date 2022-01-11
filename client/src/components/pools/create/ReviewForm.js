@@ -13,7 +13,7 @@ const ReviewForm = ({ data }) => {
     <Stack spacing="1rem" marginTop="2rem">
       <FormLabel>Review Information</FormLabel>
       <Box border="1px solid" borderRadius="md">
-        <Table variant="striped">
+        <Table>
           <Thead>
             <Tr>
               <Th colSpan={2}>General Information</Th>
@@ -44,10 +44,9 @@ const ReviewForm = ({ data }) => {
         </Table>
       </Box>
       <Box border="1px solid" borderRadius="md">
-        <Table variant="striped">
+        <Table>
           <Thead>
             <Tr>
-              <Th>Owner Name</Th>
               <Th>Owner Harmony One Wallet Address</Th>
             </Tr>
           </Thead>
@@ -55,7 +54,6 @@ const ReviewForm = ({ data }) => {
             {
               data.owners.map((owner, index) => (
                 <Tr key={`owner_${index}`}>
-                  <Td>{owner.name}</Td>
                   <Td>{owner.address}</Td>
                 </Tr>
               ))

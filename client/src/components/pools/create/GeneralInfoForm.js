@@ -27,11 +27,11 @@ const GeneralInfoForm = ({ form }) => {
           <FormErrorMessage>{errors?.goal?.message}</FormErrorMessage>
           <FormHelperText>This is the goal amount in $ONE for the pool. People can still contribute to the pool even after the goal is reached.</FormHelperText>
         </FormControl>
-        <FormControl isInvalid={errors?.end?.message} errortext={errors?.end?.message}>
-          <FormLabel>Pool End Date</FormLabel>
-          <Input type="date" { ...register("end") }/>
+        <FormControl isRequired isInvalid={errors?.end?.message} errortext={errors?.end?.message}>
+          <FormLabel>Pool duration (in days)</FormLabel>
+          <Input { ...register("end") }/>
           <FormErrorMessage>{errors?.end?.message}</FormErrorMessage>
-          <FormHelperText>This is the pool will end on your specified date at 23:59 UTC time. People can still contribute to the pool even after the pool end date.</FormHelperText>
+          <FormHelperText>Number of days until pool owners can create proposals. People can still contribute to the pool even after the pool end date.</FormHelperText>
         </FormControl>
       </HStack>
     </Stack>

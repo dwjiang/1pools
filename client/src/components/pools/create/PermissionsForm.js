@@ -18,7 +18,7 @@ const PermissionsForm = ({ form }) => {
   let [ state, dispatch ] = [ useTrackedState(), useSetState() ];
     
   const addNewOwner = () => {
-    append({ name: `Owner ${fields.length}`, address: "" });
+    append({ address: "" });
   }
   
   const removeOwner = (index) => {
@@ -51,7 +51,7 @@ const PermissionsForm = ({ form }) => {
           onClick={clearAllOwners}>Clear All Owners</Button>
       </HStack>
       <Box border="1px solid" borderRadius="md">
-        <Table variant="striped">
+        <Table variant="simple">
           <TableCaption>
             Every owner will have equal voting rights in this pool. 
             All owners can post updates and call for proposals for transactions. You don't have to be an owner to contribute funds to a pool.
@@ -59,26 +59,17 @@ const PermissionsForm = ({ form }) => {
           </TableCaption>
           <Thead>
             <Tr>
-              <Th>Owner Name</Th>
-              <Th>Owner Harmony One Wallet Address</Th>
-              <Th>Actions</Th>
+              <Th w="90%">Owner Harmony One Wallet Address</Th>
+              <Th w="10%">Actions</Th>
             </Tr>
           </Thead>
           <Tbody>
             { fields.map((owner, index) => (
                 <Tr key={`owner_${index}`}>
                   <Td>
-                    <FormControl isRequired isInvalid={errors?.owners?.[index]?.name?.message} 
-                      errortext={errors?.owners?.[index]?.name?.message}>
-                      <Input defaultValue={owner.name} placeholder="Required (Maximum 50 Characters)"
-                        name={`owners.${index}.name`} { ...register(`owners.${index}.name`) }/>
-                      <FormErrorMessage>{errors?.owners?.[index]?.name?.message}</FormErrorMessage>
-                    </FormControl>
-                  </Td>
-                  <Td>
                     <FormControl isRequired isInvalid={errors?.owners?.[index]?.address?.message} 
                       errortext={errors?.owners?.[index]?.address?.message}>
-                      <Input isDisabled={index === 0} defaultValue={owner.address} placeholder="Required"
+                      <Input isDisabled={index === 0} defaultValue={owner} placeholder="Required"
                         name={`owners.${index}.address`} { ...register(`owners.${index}.address`) } />
                       <FormErrorMessage>{errors?.owners?.[index]?.address?.message}</FormErrorMessage>
                     </FormControl>

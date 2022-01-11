@@ -4,21 +4,21 @@ import { Box, Button, Center, CircularProgress, CircularProgressLabel, Container
   Heading, HStack, IconButton, Input, InputGroup, InputRightElement, Link, Progress, SimpleGrid, Spacer, Stack, Stat, StatLabel, StatNumber,
   StatHelpText, StatArrow, StatGroup, Tabs, TabList, TabPanels, Tab, TabPanel, Table, Thead, Tbody, Tfoot, Tr, Th, Td, TableCaption, Text, Textarea, VStack, useToast } from "@chakra-ui/react";
 import { CalendarIcon, CopyIcon, ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import { ChainID, ChainType, hexToNumber, numberToHex, fromWei, Units, Unit } from "@harmony-js/utils";
 import { useTrackedState, useSetState } from "store";
 import { useLocation, useParams } from "react-router-dom";
 import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import CommentsCard from "components/pools/view/CommentsCard";
 import ProposalsCard from "components/pools/view/ProposalsCard";
+import ContributeModal from "components/pools/contribute/ContributeModal";
+import CreateProposalModal from "components/pools/proposals/CreateProposalModal";
 import CommentsSchema from "validations/schemas/CommentsSchema";
 import yup from "validations/validations";
 import * as Constants from "constants/Constants";
 import * as Utils from "utils/Utils";
 import moment from "moment";
-
-const debug = false;
-const green = debug ? "green" : "white";
-const red = debug ? "red" : "white";
+import PoolsABI from "abi/Pools";
 
 const Pool = (props) => {
   const toast = useToast();
@@ -27,6 +27,8 @@ const Pool = (props) => {
   let [ comments, setComments ] = useState([]);
   let [ updates, setUpdates ] = useState([]);
   let [ proposals, setProposals ] = useState([]);
+  let [ isContributeModalOpen, setIsContributeModalOpen ] = useState(false);
+  let [ isCreateProposalModalOpen, setIsCreateProposalModalOpen ] = useState(false);
 
   const location = useLocation();
   const { id } = useParams();
@@ -46,32 +48,101 @@ const Pool = (props) => {
   //  fetch updates
   //  fetch comments
   useEffect(() => {
-    setPoolMetadata({
-      name: "Secret Birthday Present for Jordan (Bike)",
-      description: 
-        `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Et tortor at risus viverra adipiscing at in tellus integer. Pretium vulputate sapien nec sagittis aliquam malesuada bibendum. Odio eu feugiat pretium nibh ipsum consequat. Neque ornare aenean euismod elementum nisi. Aliquet risus feugiat in ante metus. Mi quis hendrerit dolor magna eget est lorem. Leo in vitae turpis massa sed elementum. Non odio  euismod lacinia at. Eget est lorem ipsum dolor sit. Ut aliquam purus sit amet luctus venenatis lectus magna fringilla. Egestas diam in arcu cursus euismod quis. Magna ac placerat vestibulum lectus mauris ultrices eros in. Vulputate enim nulla aliquet porttitor lacus luctus accumsan. Ultrices gravida dictum fusce ut. Viverra vitae congue eu consequat.
-
-        Elit scelerisque mauris pellentesque pulvinar pellentesque habitant morbi. Vitae sapien pellentesque habitant morbi tristique. Nunc scelerisque viverra mauris in aliquam sem fringilla ut. Tristique magna sit amet purus gravida quis blandit turpis. Sodales neque sodales ut etiam sit amet nisl. Suscipit tellus mauris a diam maecenas sed. Integer malesuada nunc vel risus commodo viverra maecenas. Ultrices dui sapien eget mi proin sed libero enim sed. Sagittis orci a scelerisque purus semper. Ultricies leo integer malesuada nunc vel risus. Lectus magna fringilla urna porttitor. Nulla aliquet porttitor lacus luctus accumsan tortor posuere ac. Hac habitasse platea dictumst vestibulum rhoncus. Mauris pellentesque pulvinar pellentesque habitant morbi tristique senectus et.`,
-      goal: 345670,
-      end: "2022-02-11",
-      owners: [
-        { name: "Daniel", address: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry" },
-        { name: "Kelly", address: "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm" },
-        { name: "Kelly", address: "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm" },
-        { name: "Kelly", address: "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm" },
-        { name: "Kelly", address: "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm" },
-        { name: "Kelly", address: "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm" },
-        { name: "Kelly", address: "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm" },
-        { name: "Kelly", address: "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm" },
-      ],
-      ownersForProposal: 2,
-    });
+    fetchPoolMetadata();
+    fetchProposals();
     fetchUpdates();
     fetchComments();
+    // setPoolMetadata({
+    //   goal: 345670,
+    //   end: 5,
+    //   creator: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
+    //   owners: [
+    //     "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
+    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
+    //     "one1klfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8lvolp",
+    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
+    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
+    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
+    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
+    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
+    //   ],
+    //   ownersForProposal: 2,
+    // });
+    // setProposals([
+    //   {
+    //     proposedBy: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
+    //     destination: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
+    //     amount: 12354,
+    //     executed: false,
+    //     data: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Et tortor at risus viverra adipiscing at in tellus integer. Pretium vulputate sapien nec sagittis aliquam malesuada bibendum. Odio eu feugiat pretium nibh ipsum consequat. Neque ornare aenean euismod elementum nisi.",
+    //     confirmations: {
+    //       one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm: 1,
+    //       one1klfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8lvolp: 2,
+    //     },
+    //     numConfirmations: {
+    //       0: 6, 1: 1, 2: 1, 3: 0
+    //     }
+    //   },
+    //   {
+    //     proposedBy: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
+    //     destination: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
+    //     amount: 12354,
+    //     executed: true,
+    //     data: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Et tortor at risus viverra adipiscing at in tellus integer. Pretium vulputate sapien nec sagittis aliquam malesuada bibendum. Odio eu feugiat pretium nibh ipsum consequat. Neque ornare aenean euismod elementum nisi.",
+    //     confirmations: {
+    //       one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm: 1,
+    //       one1klfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8lvolp: 2,
+    //     },
+    //     numConfirmations: {
+    //       0: 6, 1: 1, 2: 1, 3: 0
+    //     }
+    //   }
+    // ]);
   }, []);
   
+  const fetchPoolMetadata = async () => {
+    let metadata = {};
+    const client = state.harmony.client;
+    const contract = await client.contracts.createContract(PoolsABI, id);
+    const attachedContract = await state.walletConnector.attachToContract(contract);
+    
+    metadata.hash = await attachedContract.methods.getMetadata().call();
+    metadata.owners = (await attachedContract.methods.getOwners().call()).map(address => client.crypto.toBech32(address));
+    metadata.ownersForProposal = (await attachedContract.methods.getConfirmationsRequired().call())?.words?.[0];
+        
+    await axios.get(`${Constants.PINATA_URL_GATEWAY}/${metadata.hash}`).then(response => {
+      if (response.status !== 200)
+        throw new Error();
+      metadata.name = response.data.name;
+      metadata.description = response.data.description;
+      metadata.goal = response.data.goal;
+      metadata.end = response.data.end;
+    }).catch(async (error) => {
+      toast({
+        title: "Error fetching metadata",
+        status: "error",
+        isClosable: true,
+        position: "bottom-right",
+      });
+    });
+      
+    setPoolMetadata(metadata);
+  }
+  
+  const fetchProposals = async () => {
+    let proposals = [];
+    const client = state.harmony.client;
+    const contract = await client.contracts.createContract(PoolsABI, id);
+    const attachedContract = await state.walletConnector.attachToContract(contract);
+    
+    const numProposals = await attachedContract.methods.getNumProposals().call();
+    for (let i = 0; i < numProposals; i++) {
+      
+    }
+  }
+  
   const isAddressOwner = (address) => {
-    return poolMetadata?.owners?.some(owner => owner.address === address);
+    return poolMetadata?.owners?.some(owner => owner === address);
   }
   
   const fetchUpdates = async () => {
@@ -155,23 +226,59 @@ const Pool = (props) => {
       });
     }
   }
+  
+  const copyToClipboard = async (text) => {
+    try {
+      await Utils.copyToClipboard(text);
+      toast({
+        title: "Copied to clipboard",
+        status: "success",
+        isClosable: true,
+        position: "bottom-right",
+      });
+    } catch (error) {
+      toast({
+        title: "Error copying to clipboard",
+        status: "error",
+        isClosable: true,
+        position: "bottom-right",
+      });
+    }
+  }
+  
+  // TODO
+  const calculateDaysToEnd = () => {
+    const days = moment.utc(poolMetadata?.end).diff(moment.utc(), "days");
+    if (days >= 100) {
+      return "100+ days";
+    } else if (days === 0) {
+      const hours = moment.utc(poolMetadata?.end).diff(moment.utc(), "hours");
+      if (hours >= 1)
+        return `${hours} hours`;
+      return "< 1 hours";
+    }
+    return `${days} days`;
+  }
 
   return (
     <SimpleGrid w="full" columns={[1, null, 3]} gap="2rem">
+      <ContributeModal id={id} isOpen={isContributeModalOpen} onClose={()=>setIsContributeModalOpen(false)}/>
+      <CreateProposalModal id={id} ownersForProposal={poolMetadata?.ownersForProposal} numOwners={poolMetadata?.owners?.length} 
+        isOpen={isCreateProposalModalOpen} onClose={()=>setIsCreateProposalModalOpen(false)}/>
       <GridItem colSpan={2}>
-        <VStack w="full" h="full" spacing="2rem" align="flex-start" bg={red}>
-          <Box w="full" bg={green}>
-            <Heading>{poolMetadata.name}</Heading>
-            <Text fontSize="lg">{`Organized by ${poolMetadata?.owners?.[0]?.name} 
-              (${Utils.shortenWalletAddress(poolMetadata?.owners?.[0]?.address)}) `}
-              <IconButton size="xs" icon={<CopyIcon/>}/>
+        <VStack w="full" h="full" spacing="2rem" align="flex-start">
+          <Box w="full">
+            <Heading>{poolMetadata?.name}</Heading>
+            <Text fontSize="lg">{`Organized by ${poolMetadata?.creator} `}
+              <IconButton size="xs" icon={<CopyIcon/>}
+                onClick={()=>copyToClipboard(poolMetadata?.creator)}/>
             </Text>
           </Box>
-          <Box w="full" bg={green}>
-            <Text fontSize="lg">{poolMetadata.description}</Text>
+          <Box w="full">
+            <Text fontSize="lg">{poolMetadata?.description}</Text>
           </Box>
-          <Flex bg={green} p="1rem" border="1px solid" borderRadius="md" w="full">
-            <Tabs isFitted variant="enclosed" maxH="50rem" w="full" overflowY="scroll">
+          <Flex p="1rem" border="1px solid" borderRadius="md" w="full">
+            <Tabs isFitted variant="enclosed" maxH="40rem" w="full" overflowY="scroll">
               <TabList>
                 <Tab>Updates</Tab>
                 <Tab>Proposals</Tab>
@@ -184,7 +291,7 @@ const Pool = (props) => {
                       <Center>
                         { isAddressOwner(state.walletAddress) ? 
                           <FormControl w="full" isInvalid={forms.updates?.formState?.errors?.content?.message} 
-                            errortext={forms.updates?.formState?.errors?.content?.message}>
+                            errortext={forms.updates?.formState?.errors?.content?.message} mb="2rem">
                             <HStack mb="1rem">
                               <Heading size="sm">Submit New Update</Heading>
                               <Spacer/>
@@ -207,7 +314,7 @@ const Pool = (props) => {
                             )
                           }
                         </Stack> :
-                        <Center mt="2rem">No updates yet.</Center>
+                        <Center>No updates yet.</Center>
                       }
                     </Box>
                   </Box>
@@ -216,7 +323,10 @@ const Pool = (props) => {
                   <Box mt="1rem">
                     { proposals.length === 0 ?
                       <Stack>
-                        { isAddressOwner(state.walletAddress) ? <Center><Button mb="2rem">Submit New Proposal</Button></Center> : "" }
+                        { isAddressOwner(state.walletAddress) ? 
+                          <Center>
+                            <Button onClick={()=>setIsCreateProposalModalOpen(true)} mb="2rem">Submit New Proposal</Button>
+                          </Center> : "" }
                         <Center>No proposals yet.</Center>
                       </Stack> :
                       <Box>
@@ -225,7 +335,10 @@ const Pool = (props) => {
                         </Center>
                         <Stack spacing="2rem">
                           {
-                            proposals.map(proposal => <ProposalsCard item={proposal}/>)
+                            proposals.reverse().map((proposal, index) => 
+                              <ProposalsCard key={`proposal_${index}`} item={proposal} index={proposals.length - index} 
+                                ownersForProposal={poolMetadata?.ownersForProposal}/>
+                            )
                           }
                         </Stack>
                       </Box>
@@ -241,10 +354,11 @@ const Pool = (props) => {
                           <HStack mb="1rem">
                             <Heading size="sm">Submit New Comment</Heading>
                             <Spacer/>
-                            <Button size="sm" onClick={forms.comments?.handleSubmit(submitComment)}>Submit</Button>
+                            <Button size="sm" onClick={forms.comments?.handleSubmit(submitComment)} 
+                              isDisabled={!state.walletAddress}>Submit</Button>
                           </HStack>
-                          <Textarea placeholder="Your Message (Maximum 1000 Characters)"
-                            minHeight="8rem" { ...forms.comments.register("content") } />
+                          <Textarea placeholder={ state.walletAddress ? "Your Message (Maximum 1000 Characters)" : "Login to submit a comment" }
+                            isDisabled={!state.walletAddress} minHeight="8rem" { ...forms.comments.register("content") } />
                           <FormErrorMessage>{forms.comments?.formState?.errors?.content?.message}</FormErrorMessage>
                           <Heading size="sm" mt="2rem" mb="1rem">{comments.length} Comment(s)</Heading>
                           <Divider/>
@@ -270,9 +384,9 @@ const Pool = (props) => {
         </VStack>
       </GridItem>
       <GridItem colSpan={1}>
-        <VStack w="full" colSpan={1} spacing="2rem" align="flex-start" bg={red}>
-          <Button size="lg" w="full" mt="1rem">Contribute</Button>
-          <Box bg={green} p="1rem" border="1px solid" borderRadius="md" w="full">
+        <VStack w="full" colSpan={1} spacing="2rem" align="flex-start">
+          <Button size="lg" w="full" mt="1rem" onClick={()=>setIsContributeModalOpen(true)}>Contribute</Button>
+          <Box p="1rem" border="1px solid" borderRadius="md" w="full">
             <Stat>
               <StatLabel>Raised</StatLabel>
               <StatNumber>138,268 out of {poolMetadata?.goal?.toLocaleString()} ONE</StatNumber>
@@ -289,22 +403,23 @@ const Pool = (props) => {
             <HStack mb="0.5rem">
               <CalendarIcon boxSize="1rem"/>
               <Text fontSize="sm">
-                { moment.utc(poolMetadata?.end).diff(moment.utc(), "days") + 1 } days until pool ends
+                { calculateDaysToEnd() } until pool ends (23:59 UTC)
               </Text>
             </HStack>
             <Text fontSize="sm" opacity="0.8">You can still contribute to the pool after the end date.</Text>
           </Box>
-          <VStack bg={green} p={4} border="1px solid" borderRadius="md" w="full">
+          <VStack p={4} border="1px solid" borderRadius="md" w="full">
             <Center fontSize="sm" fontWeight="medium">Share this pool</Center>
             <InputGroup margin={1}>
               <Input border="1px solid" borderRadius="md" isReadOnly
                 defaultValue={window.location.href}/>
               <InputRightElement>
-                <IconButton size="xs" icon={<CopyIcon/>}/>
+                <IconButton size="xs" icon={<CopyIcon/>} 
+                  onClick={()=>copyToClipboard(window.location.href)}/>
               </InputRightElement>
             </InputGroup>
           </VStack>
-          <VStack bg={green} p={4} border="1px solid" borderRadius="md" w="full">
+          <VStack p={4} border="1px solid" borderRadius="md" w="full">
             <Text fontSize="sm" fontWeight="medium">Pool Details</Text>
             <Table variant="simple">
               <TableCaption>
@@ -328,24 +443,19 @@ const Pool = (props) => {
               </Tbody>
             </Table>
           </VStack>
-          <VStack bg={green} p={4} border="1px solid" borderRadius="md" w="full" display="block" maxH="16rem" overflowY="scroll">
+          <VStack p={4} border="1px solid" borderRadius="md" w="full" display="block" maxH="16rem" overflowY="scroll">
             <Center fontSize="sm" fontWeight="medium">Pool Owners ({poolMetadata?.owners?.length})</Center>
-            <Table variant="striped" w="full">
-              <Thead>
-                <Tr>
-                  <Th>Owner</Th>
-                  <Th>Owner Address</Th>
-                </Tr>
-              </Thead>
+            <Table w="full">
               <Tbody>
                 {
                   poolMetadata?.owners?.map((owner, index) => (
                     <Tr key={`owner_${index}`}>
-                      <Td>{owner.name}</Td>
-                      <Td whiteSpace="nowrap">
-                        <Link href={`${Constants.EXPLORER_URL_ADDRESS}/${owner.address}`} isExternal>
-                          {Utils.shortenWalletAddress(owner.address)} <ExternalLinkIcon size="xs"/>
-                        </Link>
+                      <Td>
+                        <Flex>
+                          <Link whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden" 
+                            href={`${Constants.EXPLORER_URL_ADDRESS}/${owner}`} isExternal>{owner}</Link>
+                          <ExternalLinkIcon whiteSpace="nowrap" display="inline-block"/>
+                        </Flex>
                       </Td>
                     </Tr>
                   ))
@@ -360,245 +470,3 @@ const Pool = (props) => {
 };
 
 export default Pool;
-
-// return (
-//   <Flex display="flex" direction="row" flexWrap="wrap">
-//     <Stack h="fit-content" w="66.6%" spacing="2rem" bg={red} boxSizing="border-box">
-//       <Box w="full" bg={green}>
-//         <Heading>{poolMetadata.name}</Heading>
-//         <Text fontSize="lg">{`Organized by ${poolMetadata?.owners?.[0]?.name} 
-//           (${Utils.shortenWalletAddress(poolMetadata?.owners?.[0]?.address)}) `}
-//           <IconButton size="xs" icon={<CopyIcon/>}/>
-//         </Text>
-//       </Box>
-//       <Box w="full" bg={green}>
-//         <Text fontSize="lg">{poolMetadata.description}</Text>
-//       </Box>
-//     </Stack>
-//     <Stack h="fit-content" w="33.3%" spacing="2rem" bg={red} boxSizing="border-box">
-//       <Button size="lg" w="full" mt="1rem">Contribute</Button>
-//       <Box bg={green} p="1rem" border="1px solid" borderRadius="md" w="full">
-//         <Stat>
-//           <StatLabel>Raised</StatLabel>
-//           <StatNumber>138,268 out of {poolMetadata?.goal?.toLocaleString()} ONE</StatNumber>
-//           <StatHelpText>
-//             <StatArrow type="increase"/>
-//             28,233 ONE was contributed in the past 7 days
-//           </StatHelpText>
-//         </Stat>
-//         <Progress value={40} size="lg" borderRadius="md" mb="0.5rem"></Progress>
-//         <HStack mb="0.5rem">
-//           <InfoOutlineIcon boxSize="1rem"/>
-//           <Text fontSize="sm">212 Unique Contributors</Text>
-//         </HStack>
-//         <HStack mb="0.5rem">
-//           <CalendarIcon boxSize="1rem"/>
-//           <Text fontSize="sm">
-//             {moment.utc(poolMetadata?.end).diff(moment.utc(), "days") + 1} days until pool ends
-//           </Text>
-//         </HStack>
-//         <Text fontSize="sm" opacity="0.8">You can still contribute to the pool after the end date.</Text>
-//       </Box>
-//       <VStack bg={green} p={4} border="1px solid" borderRadius="md" w="full">
-//         <Center fontSize="sm" fontWeight="medium">Share this pool</Center>
-//         <InputGroup margin={1}>
-//           <Input border="1px solid" borderRadius="md" isReadOnly
-//             defaultValue={window.location.href}/>
-//           <InputRightElement>
-//             <IconButton size="xs" icon={<CopyIcon/>}/>
-//           </InputRightElement>
-//         </InputGroup>
-//       </VStack>
-//       <VStack bg={green} p={4} border="1px solid" borderRadius="md" w="full">
-//         <Text fontSize="sm" fontWeight="medium">Pool Details</Text>
-//         <Table>
-//           <TableCaption>
-//             <Link href={`${Constants.EXPLORER_URL_ADDRESS}/${id}`} isExternal>
-//               View on Harmony Block Explorer <ExternalLinkIcon size="xs"/>
-//             </Link>
-//           </TableCaption>
-//           <Tbody>
-//             <Tr>
-//               <Td>Created at</Td>
-//               <Td>{poolMetadata.end}</Td>
-//             </Tr>
-//             <Tr>
-//               <Td>Pool ends at</Td>
-//               <Td>{poolMetadata.end}</Td>
-//             </Tr>
-//             <Tr>
-//               <Td>Minimum Owners Required to Pass Proposal</Td>
-//               <Td>{poolMetadata.ownersForProposal} out of {poolMetadata.owners?.length} owners</Td>
-//             </Tr>
-//           </Tbody>
-//         </Table>
-//       </VStack>
-//       <VStack bg={green} p={4} border="1px solid" borderRadius="md" w="full">
-//         <Text fontSize="sm" fontWeight="medium">Pool Owners</Text>
-//         <Table maxH="20rem" overflowY="scroll">
-//           <Thead>
-//             <Tr>
-//               <Td>Owner</Td>
-//               <Td>Owner Address</Td>
-//             </Tr>
-//           </Thead>
-//           <Tbody>
-//             {
-//               poolMetadata?.owners?.map((owner, index) => (
-//                 <Tr key={`owner_${index}`}>
-//                   <Td>{owner.name}</Td>
-//                   <Td>
-//                     <Link href={`${Constants.EXPLORER_URL_ADDRESS}/${owner.address}`} isExternal>
-//                       {owner.address} <ExternalLinkIcon size="xs"/>
-//                     </Link>
-//                   </Td>
-//                 </Tr>
-//               ))
-//             }
-//           </Tbody>
-//         </Table>
-//       </VStack>
-//     </Stack>
-//     <Stack h="fit-content" w="66.6%" bg={green} p="1rem" border="1px solid" borderRadius="md" boxSizing="border-box">
-//       <Tabs isFitted variant="enclosed">
-//         <TabList>
-//           <Tab>Updates</Tab>
-//           <Tab>Proposals</Tab>
-//           <Tab>Comments</Tab>
-//         </TabList>
-//         <TabPanels>
-//           <TabPanel>
-//           </TabPanel>
-//           <TabPanel>
-//           </TabPanel>
-//           <TabPanel>
-//           </TabPanel>
-//         </TabPanels>
-//       </Tabs>
-//     </Stack>
-//   </Flex>
-// );
-
-// return (
-//   <SimpleGrid w="full" autoRows="min-content" columns={[1, null, 3]} gap="2rem">
-//     <GridItem colSpan={2}>
-//       <VStack w="full" spacing="2rem" align="flex-start" bg={red}>
-//         <Box w="full" bg={green}>
-//           <Heading>{poolMetadata.name}</Heading>
-//           <Text fontSize="lg">{`Organized by ${poolMetadata?.owners?.[0]?.name} 
-//             (${Utils.shortenWalletAddress(poolMetadata?.owners?.[0]?.address)}) `}
-//             <IconButton size="xs" icon={<CopyIcon/>}/>
-//           </Text>
-//         </Box>
-//         <Box w="full" bg={green}>
-//           <Text fontSize="lg">{poolMetadata.description}</Text>
-//         </Box>
-//       </VStack>
-//     </GridItem>
-//     <GridItem colSpan={1}>
-//       <VStack w="full" colSpan={1} spacing="2rem" align="flex-start" bg={red}>
-//         <Button size="lg" w="full" mt="1rem">Contribute</Button>
-//         <Box bg={green} p="1rem" border="1px solid" borderRadius="md" w="full">
-//           <Stat>
-//             <StatLabel>Raised</StatLabel>
-//             <StatNumber>138,268 out of {poolMetadata?.goal?.toLocaleString()} ONE</StatNumber>
-//             <StatHelpText>
-//               <StatArrow type="increase"/>
-//               28,233 ONE was contributed in the past 7 days
-//             </StatHelpText>
-//           </Stat>
-//           <Progress value={40} size="lg" borderRadius="md" mb="0.5rem"></Progress>
-//           <HStack mb="0.5rem">
-//             <InfoOutlineIcon boxSize="1rem"/>
-//             <Text fontSize="sm">212 Unique Contributors</Text>
-//           </HStack>
-//           <HStack mb="0.5rem">
-//             <CalendarIcon boxSize="1rem"/>
-//             <Text fontSize="sm">
-//               {moment.utc(poolMetadata?.end).diff(moment.utc(), "days") + 1} days until pool ends
-//             </Text>
-//           </HStack>
-//           <Text fontSize="sm" opacity="0.8">You can still contribute to the pool after the end date.</Text>
-//         </Box>
-//         <VStack bg={green} p={4} border="1px solid" borderRadius="md" w="full">
-//           <Center fontSize="sm" fontWeight="medium">Share this pool</Center>
-//           <InputGroup margin={1}>
-//             <Input border="1px solid" borderRadius="md" isReadOnly
-//               defaultValue={window.location.href}/>
-//             <InputRightElement>
-//               <IconButton size="xs" icon={<CopyIcon/>}/>
-//             </InputRightElement>
-//           </InputGroup>
-//         </VStack>
-//         <VStack bg={green} p={4} border="1px solid" borderRadius="md" w="full">
-//           <Text fontSize="sm" fontWeight="medium">Pool Details</Text>
-//           <Table>
-//             <TableCaption>
-//               <Link href={`${Constants.EXPLORER_URL_ADDRESS}/${id}`} isExternal>
-//                 View on Harmony Block Explorer <ExternalLinkIcon size="xs"/>
-//               </Link>
-//             </TableCaption>
-//             <Tbody>
-//               <Tr>
-//                 <Td>Created at</Td>
-//                 <Td>{poolMetadata.end}</Td>
-//               </Tr>
-//               <Tr>
-//                 <Td>Pool ends at</Td>
-//                 <Td>{poolMetadata.end}</Td>
-//               </Tr>
-//               <Tr>
-//                 <Td>Minimum Owners Required to Pass Proposal</Td>
-//                 <Td>{poolMetadata.ownersForProposal} out of {poolMetadata.owners?.length} owners</Td>
-//               </Tr>
-//             </Tbody>
-//           </Table>
-//         </VStack>
-//         <VStack bg={green} p={4} border="1px solid" borderRadius="md" w="full">
-//           <Text fontSize="sm" fontWeight="medium">Pool Owners</Text>
-//           <Table tableLayout="fixed" maxH="20rem" overflowY="scroll">
-//             <Thead>
-//               <Tr>
-//                 <Td>Owner</Td>
-//                 <Td>Owner Address</Td>
-//               </Tr>
-//             </Thead>
-//             <Tbody>
-//               {
-//                 poolMetadata?.owners?.map((owner, index) => (
-//                   <Tr key={`owner_${index}`}>
-//                     <Td>{owner.name}</Td>
-//                     <Td>
-//                       <Link href={`${Constants.EXPLORER_URL_ADDRESS}/${owner.address}`} isExternal>
-//                         {owner.address} <ExternalLinkIcon size="xs"/>
-//                       </Link>
-//                     </Td>
-//                   </Tr>
-//                 ))
-//               }
-//             </Tbody>
-//           </Table>
-//         </VStack>
-//       </VStack>
-//     </GridItem>
-//     <GridItem colSpan={2}>
-//       <Box bg={green} p="1rem" border="1px solid" borderRadius="md" w="full">
-//         <Tabs isFitted variant="enclosed">
-//           <TabList>
-//             <Tab>Updates</Tab>
-//             <Tab>Proposals</Tab>
-//             <Tab>Comments</Tab>
-//           </TabList>
-//           <TabPanels>
-//             <TabPanel>
-//             </TabPanel>
-//             <TabPanel>
-//             </TabPanel>
-//             <TabPanel>
-//             </TabPanel>
-//           </TabPanels>
-//         </Tabs>
-//       </Box>
-//     </GridItem>
-//   </SimpleGrid>
-// );

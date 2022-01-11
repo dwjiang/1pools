@@ -80,7 +80,6 @@ contract Pools {
 	function createProposal(address payable _destination, uint _amount, bytes memory _data) 
 		public
 		ownerExists(msg.sender)
-		validPoolTimeWindow()
 	{
 		Proposal storage proposal = proposals[numProposals++];
 		isProposal[numProposals] = true;

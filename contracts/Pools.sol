@@ -139,14 +139,9 @@ contract Pools {
 		return proposal.numConfirmations[_proposalConfirmationTypes];
 	}
 		
-	function getProposal(uint _proposalId) public view returns (address, uint, bool) {
+	function getProposal(uint _proposalId) public view returns (address, uint, bool, bytes memory, uint256, address) {
 		Proposal storage proposal = proposals[_proposalId];
-		return (proposal.destination, proposal.amount, proposal.executed);
-	}
-
-	function getProposalCreatedTime(uint _proposalId) public view returns (uint256) {
-		Proposal storage proposal = proposals[_proposalId];
-		return proposal.creationTime;
+		return (proposal.destination, proposal.amount, proposal.executed, proposal.data, proposal.creationTime, proposal.creator);
 	}
 		
 	function getConfirmationsRequired() public view returns (uint) {
@@ -155,11 +150,6 @@ contract Pools {
 	
 	function getMetadata() public view returns (string memory) {
 		return metadata;
-	}
-
-	function getProposalCreator(uint _proposalId) public view returns (address) {
-		Proposal storage proposal = proposals[_proposalId];
-		return proposal.creator;
 	}
 
 	function getPoolCreatedTime() public view returns(uint256) {

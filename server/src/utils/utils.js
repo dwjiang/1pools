@@ -21,7 +21,7 @@ const verifySignature = (address, signedNonce, nonce) => {
 
 const verifyOwner = async (address, pool) => {
   const contract = await harmony.client.contracts.createContract(PoolsABI, pool);
-  return (await contract.methods.getOwners().call()).some(owner => owner === address);
+  return (await contract.methods.getOwners().call()).some(owner => harmony.client.crypto.toBech32(owner) === address);
 }
 
 module.exports = {

@@ -16,7 +16,9 @@ const ProposalsCard = ({ item, index, ownersForProposal }) => {
         <HStack>
           <Heading size="xs">{`Proposal #${index}`}</Heading>
           { item.executed && <Badge>Executed</Badge> }
-          <Text fontSize="xs" opacity={0.8}>Proposed by {Utils.shortenWalletAddress(item.proposedBy)}</Text>
+          <Text fontSize="xs" opacity={0.8}>
+            Proposed by {Utils.shortenWalletAddress(item.proposedBy)} on {item.createdAt}
+          </Text>
         </HStack>
         <Stack>
           <Text fontSize="sm" opacity={0.8}>Send {item.amount} $ONE to {Utils.shortenWalletAddress(item.destination)}.</Text>

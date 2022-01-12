@@ -15,139 +15,15 @@ const PoolsABI = [
 				"internalType": "string",
 				"name": "_metadata",
 				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_ttl",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_count",
-				"type": "uint256"
-			}
-		],
-		"name": "confirmationRequiredCount",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address[]",
-				"name": "_owners",
-				"type": "address[]"
-			}
-		],
-		"name": "getAllOwners",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "_metadata",
-				"type": "string"
-			}
-		],
-		"name": "metadataInfo",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "enum Pools.ProposalConfirmationTypes",
-				"name": "_confirmationTypes",
-				"type": "uint8"
-			}
-		],
-		"name": "ownerConfirmationTypes",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_count",
-				"type": "uint256"
-			}
-		],
-		"name": "ownersCount",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_count",
-				"type": "uint256"
-			}
-		],
-		"name": "proposalConfirmationCount",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_count",
-				"type": "uint256"
-			}
-		],
-		"name": "proposalCount",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_creator",
-				"type": "address"
-			}
-		],
-		"name": "proposalCreatedBy",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_destionation",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_amount",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "_executed",
-				"type": "bool"
-			}
-		],
-		"name": "proposalInfo",
-		"type": "event"
 	},
 	{
 		"inputs": [
@@ -182,7 +58,7 @@ const PoolsABI = [
 		],
 		"name": "executeProposal",
 		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "payable",
 		"type": "function"
 	},
 	{
@@ -195,7 +71,7 @@ const PoolsABI = [
 				"type": "uint256"
 			}
 		],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -208,7 +84,7 @@ const PoolsABI = [
 				"type": "string"
 			}
 		],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -221,7 +97,7 @@ const PoolsABI = [
 				"type": "uint256"
 			}
 		],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -234,7 +110,7 @@ const PoolsABI = [
 				"type": "uint256"
 			}
 		],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -258,7 +134,7 @@ const PoolsABI = [
 				"type": "uint8"
 			}
 		],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -271,7 +147,33 @@ const PoolsABI = [
 				"type": "address[]"
 			}
 		],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPoolCreatedTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPoolTTL",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -298,22 +200,24 @@ const PoolsABI = [
 				"internalType": "bool",
 				"name": "",
 				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getProposalCreator",
-		"outputs": [
+			},
+			{
+				"internalType": "bytes",
+				"name": "",
+				"type": "bytes"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
 			{
 				"internalType": "address",
 				"name": "",
 				"type": "address"
 			}
 		],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -337,7 +241,7 @@ const PoolsABI = [
 				"type": "uint256"
 			}
 		],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -355,7 +259,7 @@ const PoolsABI = [
 		],
 		"name": "setConfirmation",
 		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "payable",
 		"type": "function"
 	}
 ];

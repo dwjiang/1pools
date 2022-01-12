@@ -8,8 +8,10 @@ export const SERVER_URL_API = `${SERVER_URL_BASE}/api`;
 
 export const PINATA_URL_GATEWAY = "https://gateway.pinata.cloud/ipfs";
 
-export const POOLS_FACTORY_ADDRESS = "one1f78fvxdvspnvfh2ds2qftufvkyatgu6tffk7tg";
+export const POOLS_FACTORY_ADDRESS = "0x31C1Ed10Feb40FFCC3C4473063a8C5d51b0254fe";
 
 export const VOTES_ENUM = ["UNDECIDED", "YES", "NO", "ABSTAIN"];
 
 export const HMY_RPC_URL = "https://api.s0.b.hmny.io";
+
+export const HARMONY_CHROME_STORE_URL = "https://chrome.google.com/webstore/detail/harmony-chrome-extension/fnnegphlobjdpkhecapkijjdkgcjhkib";

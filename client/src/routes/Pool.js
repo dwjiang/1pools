@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useState, useEffect, useRef } from "react";
 import { Box, Button, Center, CircularProgress, CircularProgressLabel, Container, Divider, Flex, FormControl, FormErrorMessage, FormHelperText, FormLabel, Grid, GridItem,
-  Heading, HStack, IconButton, Input, InputGroup, InputRightElement, Link, Progress, SimpleGrid, Spacer, Stack, Stat, StatLabel, StatNumber,
+  Heading, HStack, IconButton, Input, InputGroup, InputRightElement, Link, Progress, SimpleGrid, Spacer, Stack, Stat, StatLabel, StatNumber, Skeleton,
   StatHelpText, StatArrow, StatGroup, Tabs, TabList, TabPanels, Tab, TabPanel, Table, Thead, Tbody, Tfoot, Tr, Th, Td, TableCaption, Text, Textarea, VStack, useToast } from "@chakra-ui/react";
 import { CalendarIcon, CopyIcon, ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { ChainID, ChainType, hexToNumber, numberToHex, fromWei, Units, Unit } from "@harmony-js/utils";
@@ -19,6 +19,7 @@ import * as Constants from "constants/Constants";
 import * as Utils from "utils/Utils";
 import moment from "moment";
 import PoolsABI from "abi/Pools";
+import PoolFactoryABI from "abi/PoolFactory";
 
 const Pool = (props) => {
   const toast = useToast();
@@ -29,6 +30,8 @@ const Pool = (props) => {
   let [ proposals, setProposals ] = useState([]);
   let [ isContributeModalOpen, setIsContributeModalOpen ] = useState(false);
   let [ isCreateProposalModalOpen, setIsCreateProposalModalOpen ] = useState(false);
+  let [ loading, setLoading ] = useState(true);
+  let [ found, setFound ] = useState(true);
 
   const location = useLocation();
   const { id } = useParams();
@@ -48,10 +51,22 @@ const Pool = (props) => {
   //  fetch updates
   //  fetch comments
   useEffect(() => {
-    fetchPoolMetadata();
-    fetchProposals();
-    fetchUpdates();
-    fetchComments();
+    
+    Promise.all([fetchPoolMetadata(), fetchProposals(), fetchUpdates(), fetchComments()])
+      .catch(error => setFound(false)).finally(() => setLoading(false));
+    
+    // (async () => {
+    //   try {
+    //     fetchPoolMetadata();
+    //     fetchProposals();
+    //     fetchUpdates();
+    //     fetchComments();
+    //   } catch (error) {
+    //     setFound(false);
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // })();
     // setPoolMetadata({
     //   goal: 345670,
     //   end: 5,
@@ -104,11 +119,14 @@ const Pool = (props) => {
     let metadata = {};
     const client = state.harmony.client;
     const contract = await client.contracts.createContract(PoolsABI, id);
-    const attachedContract = await state.walletConnector.attachToContract(contract);
+        
+    metadata.hash = await contract.methods.getMetadata().call();
+    metadata.owners = (await contract.methods.getOwners().call()).map(address => client.crypto.toBech32(address));
+    metadata.ownersForProposal = (await contract.methods.getConfirmationsRequired().call()).toNumber();
     
-    metadata.hash = await attachedContract.methods.getMetadata().call();
-    metadata.owners = (await attachedContract.methods.getOwners().call()).map(address => client.crypto.toBech32(address));
-    metadata.ownersForProposal = (await attachedContract.methods.getConfirmationsRequired().call())?.words?.[0];
+    const createdAt = moment.unix((await contract.methods.getPoolCreatedTime().call()).toNumber()).local();
+    metadata.createdAt = moment(createdAt).format("LLL");
+    metadata.endsAt = moment(createdAt).add((await contract.methods.getPoolTTL().call()).toNumber(), "days").format("LLL");
         
     await axios.get(`${Constants.PINATA_URL_GATEWAY}/${metadata.hash}`).then(response => {
       if (response.status !== 200)
@@ -116,29 +134,74 @@ const Pool = (props) => {
       metadata.name = response.data.name;
       metadata.description = response.data.description;
       metadata.goal = response.data.goal;
-      metadata.end = response.data.end;
-    }).catch(async (error) => {
-      toast({
-        title: "Error fetching metadata",
-        status: "error",
-        isClosable: true,
-        position: "bottom-right",
+    });
+    
+    await axios.post(`${Constants.HMY_RPC_URL}`, {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "hmyv2_getBalance",
+      params: [ id ]
+    }).then(response => {
+      if (response.status !== 200)
+        throw new Error();
+      metadata.balance = (response.data.result / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    });
+        
+    await axios.post(`${Constants.SERVER_URL_API}/pools/view`, null, {
+      params: { id }
+    });
+    
+    await axios.get(`${Constants.SERVER_URL_API}/pools/get-views`, {
+      params: { id }
+    }).then(response => {
+      if (response.status !== 200)
+        throw new Error();
+      metadata.views = response.data.views;
+    });
+    
+    const factoryContract = await client.contracts.createContract(PoolFactoryABI, Constants.POOLS_FACTORY_ADDRESS);
+    metadata.creator = client.crypto.toBech32(await factoryContract.methods.getCreator(id).call());
+
+    setPoolMetadata({ ...poolMetadata, ...metadata });
+  }
+  
+  const fetchBalance = async () => {
+    await axios.post(`${Constants.HMY_RPC_URL}`, {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "hmyv2_getBalance",
+      params: [ id ]
+    }).then(response => {
+      if (response.status !== 200)
+        throw new Error();
+      setPoolMetadata({ ...poolMetadata, 
+        balance: (response.data.result / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 }) 
       });
     });
-      
-    setPoolMetadata(metadata);
   }
   
   const fetchProposals = async () => {
     let proposals = [];
     const client = state.harmony.client;
     const contract = await client.contracts.createContract(PoolsABI, id);
-    const attachedContract = await state.walletConnector.attachToContract(contract);
     
-    const numProposals = await attachedContract.methods.getNumProposals().call();
+    const numProposals = (await contract.methods.getNumProposals().call()).toNumber();
     for (let i = 0; i < numProposals; i++) {
+      let proposal = { numConfirmations: {} };
+      const proposalData = await contract.methods.getProposal(i).call();
+      proposal.destination = client.crypto.toBech32(proposalData[0]);
+      proposal.amount = parseInt(proposalData[1]);
+      proposal.executed = proposalData[2];
+      proposal.data = String.fromCharCode(...client.crypto.hexToByteArray(proposalData[3]));
+      proposal.createdAt = moment.unix(proposalData[4]).local().format("LLL");
+      proposal.proposedBy = client.crypto.toBech32(proposalData[5]);
       
+      for (let j = 0; j < 4; j++) {
+        proposal.numConfirmations[j] = (await contract.methods.getProposalNumConfirmations(i, j).call()).toNumber();
+      }
+      proposals.push(proposal);
     }
+    setProposals(proposals);
   }
   
   const isAddressOwner = (address) => {
@@ -246,25 +309,65 @@ const Pool = (props) => {
     }
   }
   
-  // TODO
   const calculateDaysToEnd = () => {
-    const days = moment.utc(poolMetadata?.end).diff(moment.utc(), "days");
+    const days = moment(poolMetadata?.endsAt).diff(moment(), "days");
     if (days >= 100) {
       return "100+ days";
     } else if (days === 0) {
-      const hours = moment.utc(poolMetadata?.end).diff(moment.utc(), "hours");
+      const hours = moment(poolMetadata?.endsAt).diff(moment(), "hours");
       if (hours >= 1)
         return `${hours} hours`;
-      return "< 1 hours";
+      return "< 1 hour";
     }
     return `${days} days`;
   }
+  
+  const createProposalOnSubmit = async (data) => {
+    try {
+      const client = state.harmony.client;
+      const contract = await client.contracts.createContract(PoolsABI, id);
+      const attachedContract = await state.walletConnector.attachToContract(contract);
+      await attachedContract.methods.createProposal(data.address, data.amount, client.crypto.hexToByteArray(new Buffer(data.message).toString("hex"))).send({
+        from: state.walletConnector.address
+      }).on("receipt", receipt => {
+        console.log(receipt);
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  
+  if (loading) {
+    return (
+      <SimpleGrid w="full" columns={[1, null, 3]} gap="2rem">
+        <GridItem colSpan={2} mt="1rem">
+          <Stack>
+            <Skeleton h="6rem"/>
+            <Skeleton h="80rem"/>
+          </Stack>
+        </GridItem>
+        <Skeleton mt="1rem">
+          <GridItem colSpan={1}/>
+        </Skeleton>      
+      </SimpleGrid>
+    );
+  }
+  
+  if (!found) {
+    return (
+      <Center h="90%">
+        <Text fontSize="lg">Error fetching pool or pool does not exist. Please try refreshing the page or check the address in the URL.</Text>
+      </Center>
+    );
+  }
+  
+  console.log(poolMetadata);
 
   return (
     <SimpleGrid w="full" columns={[1, null, 3]} gap="2rem">
       <ContributeModal id={id} isOpen={isContributeModalOpen} onClose={()=>setIsContributeModalOpen(false)}/>
       <CreateProposalModal id={id} ownersForProposal={poolMetadata?.ownersForProposal} numOwners={poolMetadata?.owners?.length} 
-        isOpen={isCreateProposalModalOpen} onClose={()=>setIsCreateProposalModalOpen(false)}/>
+        isOpen={isCreateProposalModalOpen} onClose={()=>setIsCreateProposalModalOpen(false)} onSubmit={createProposalOnSubmit}/>
       <GridItem colSpan={2}>
         <VStack w="full" h="full" spacing="2rem" align="flex-start">
           <Box w="full">
@@ -300,13 +403,13 @@ const Pool = (props) => {
                             <Textarea placeholder="Your Message (Maximum 1000 Characters)"
                               minHeight="8rem" { ...forms.updates.register("content") } />
                             <FormErrorMessage>{forms.updates?.formState?.errors?.content?.message}</FormErrorMessage>
-                            <Heading size="sm" mt="2rem" mb="1rem">{updates.length} Update(s)</Heading>
+                            <Heading size="sm" mt="2rem">{updates.length} Update(s)</Heading>
                             <Divider/>
                           </FormControl>
                          : "" }
                       </Center>
                       { updates.length > 0 ?
-                        <Stack spacing="2rem" mt="1rem">
+                        <Stack spacing="2rem">
                           {
                             updates.map((update, index) => 
                               <CommentsCard key={`update_${index}`} 
@@ -389,21 +492,17 @@ const Pool = (props) => {
           <Box p="1rem" border="1px solid" borderRadius="md" w="full">
             <Stat>
               <StatLabel>Raised</StatLabel>
-              <StatNumber>138,268 out of {poolMetadata?.goal?.toLocaleString()} ONE</StatNumber>
+              <StatNumber>{`${poolMetadata?.balance?.toLocaleString()} out of ${poolMetadata?.goal?.toLocaleString()} ONE`}</StatNumber>
               <StatHelpText>
                 <StatArrow type="increase"/>
-                28,233 ONE was contributed in the past 7 days
+                {`${poolMetadata.views} have viewed this pool in the past 7 days`}
               </StatHelpText>
             </Stat>
-            <Progress value={40} size="lg" borderRadius="md" mb="0.5rem"></Progress>
-            <HStack mb="0.5rem">
-              <InfoOutlineIcon boxSize="1rem"/>
-              <Text fontSize="sm">212 Unique Contributors</Text>
-            </HStack>
+            <Progress value={poolMetadata?.balance / poolMetadata?.goal * 100} size="lg" borderRadius="md" mb="0.5rem"></Progress>
             <HStack mb="0.5rem">
               <CalendarIcon boxSize="1rem"/>
               <Text fontSize="sm">
-                { calculateDaysToEnd() } until pool ends (23:59 UTC)
+                { calculateDaysToEnd() } until this pool ends
               </Text>
             </HStack>
             <Text fontSize="sm" opacity="0.8">You can still contribute to the pool after the end date.</Text>
@@ -430,11 +529,11 @@ const Pool = (props) => {
               <Tbody>
                 <Tr>
                   <Td>Created at</Td>
-                  <Td>{poolMetadata.end}</Td>
+                  <Td>{poolMetadata.createdAt}</Td>
                 </Tr>
                 <Tr>
                   <Td>Pool ends at</Td>
-                  <Td>{poolMetadata.end}</Td>
+                  <Td>{poolMetadata.endsAt}</Td>
                 </Tr>
                 <Tr>
                   <Td>Minimum Owners Required to Pass Proposal</Td>

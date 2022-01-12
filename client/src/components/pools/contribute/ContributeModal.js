@@ -48,7 +48,7 @@ const ContributeModal = ({ id, isOpen, onClose }) => {
             <ExternalLinkIcon size="xs"/>
           </Link>
         ),
-        status: "info",
+        status: "success",
         isClosable: true,
         position: "bottom-right",
         duration: null,

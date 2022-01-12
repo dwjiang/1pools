@@ -4,58 +4,6 @@ const PoolFactoryABI = [
         "inputs": [
             {
                 "indexed": false,
-                "internalType": "address[]",
-                "name": "_allPoolInstantiations",
-                "type": "address[]"
-            }
-        ],
-        "name": "allCreatedPools",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "_poolCreator",
-                "type": "address"
-            }
-        ],
-        "name": "createdBy",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "_creator",
-                "type": "address"
-            }
-        ],
-        "name": "instantiationCount",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "_creator",
-                "type": "address"
-            }
-        ],
-        "name": "instantiationsOfCreator",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
                 "internalType": "address",
                 "name": "_poolAddress",
                 "type": "address"
@@ -111,6 +59,11 @@ const PoolFactoryABI = [
                 "internalType": "string",
                 "name": "_metadata",
                 "type": "string"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_ttl",
+                "type": "uint256"
             }
         ],
         "name": "createPool",
@@ -134,11 +87,17 @@ const PoolFactoryABI = [
                 "type": "address[]"
             }
         ],
-        "stateMutability": "nonpayable",
+        "stateMutability": "view",
         "type": "function"
     },
     {
-        "inputs": [],
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_poolAddress",
+                "type": "address"
+            }
+        ],
         "name": "getCreator",
         "outputs": [
             {
@@ -147,7 +106,7 @@ const PoolFactoryABI = [
                 "type": "address"
             }
         ],
-        "stateMutability": "nonpayable",
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -166,7 +125,7 @@ const PoolFactoryABI = [
                 "type": "uint256"
             }
         ],
-        "stateMutability": "nonpayable",
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -185,7 +144,26 @@ const PoolFactoryABI = [
                 "type": "address[]"
             }
         ],
-        "stateMutability": "nonpayable",
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_creator",
+                "type": "address"
+            }
+        ],
+        "name": "getPool",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -226,19 +204,6 @@ const PoolFactoryABI = [
                 "internalType": "bool",
                 "name": "",
                 "type": "bool"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "poolCreator",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
             }
         ],
         "stateMutability": "view",

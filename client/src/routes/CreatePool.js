@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { AlertDescription, Button, Flex, Link, Stack, Text } from "@chakra-ui/react";
+import { AlertDescription, Box, Button, Center, Flex, Link, Stack, Text, useToast } from "@chakra-ui/react";
+import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { Step, Steps, useSteps } from "chakra-ui-steps";
 import { useTrackedState, useSetState } from "store";
 import GeneralInfoForm from "components/pools/create/GeneralInfoForm";
@@ -13,10 +14,14 @@ import PermissionsSchema from "validations/schemas/PermissionsSchema";
 import yup from "validations/validations";
 import * as Constants from "constants/Constants";
 import PoolFactoryABI from "abi/PoolFactory";
+import { useNavigate } from "react-router-dom";
 
 const CreatePool = () => {
+  const toast = useToast();
+  const navigate = useNavigate();
   let [ generalInfo, setGeneralInfo ] = useState({});
   let [ permissions, setPermissions ] = useState({});
+  let [ loading, setLoading ] = useState(false);
   let [ rules, setRules ] = useState({});
   let [ state, dispatch ] = [ useTrackedState(), useSetState() ];
   const { nextStep, prevStep, reset, activeStep } = useSteps({ initialStep: 0 });
@@ -74,72 +79,75 @@ Bibendum neque egestas congue quisque egestas diam in. Diam phasellus vestibulum
           throw new Error();
         return response.data.hash;
       }).then(async (hash) => {
-        console.log(hash);
-        console.log(state);
+        setLoading(true);
         
-        // const provider = new Web3.providers.WebsocketProvider("wss://ws.s0.b.hmny.io");
-        // const web3 = new Web3(provider);
-        // 
-        // const contract = new web3.eth.Contract(PoolFactoryABI, "0xb3d89017fe2e5db724f01adf3d6b0258248903d7");
-        // contract.methods.createPool(["0x47201e624852e53f20adacec3053ef400a6db819"], 1, hash).send({
-        //   from: state.walletConnector.address
-        // });
-        // contract.events.poolAddress({ fromBlock: 0, toBlock: "latest" }, (err, res) => {
-        //   console.log(err);
-        //   console.log(res);
-        // });
-        
-        // TODO
-        console.log(PoolFactoryABI);
-        const contract = await state.harmony.client.contracts.createContract(PoolFactoryABI, "0xb3d89017fe2e5db724f01adf3d6b0258248903d7");
+        const ttl = parseInt(forms[0].getValues().end);
+        const addresses = forms[1].getValues().owners.map(owner => owner.address);
+        const ownersForProposal = parseInt(forms[1].getValues().ownersForProposal);
+
+        const contract = await state.harmony.client.contracts.createContract(PoolFactoryABI, Constants.POOLS_FACTORY_ADDRESS);
         const attachedContract = await state.walletConnector.attachToContract(contract);
-        console.log(attachedContract);
-        // console.log(await attachedContract.methods.getInstantiationCount("one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry").call())
-        const result = await attachedContract.methods.createPool(["one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry", "one1u8gppk3j7yrgeac36fgvqrg3cd9qn5rqcxfhzr"], 1, hash).send({
+        const result = await attachedContract.methods.createPool(addresses, ownersForProposal, hash, ttl).send({
           from: state.walletConnector.address
-        }).on("receipt", receipt => {
-          console.log(receipt);
+        }).on("receipt", async (receipt) => {
+          const link = `${Constants.EXPLORER_POP_URL_BASE}/${receipt.transactionHash}`;
+          try {
+            const poolAddress = state.harmony.client.crypto.toBech32(await contract.methods.getPool(state.walletConnector.address).call());
+            if (poolAddress === "one1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqquzw7vz")
+              throw new Error();
+            toast({
+              title: "Successfully created your pool.",
+              description: (
+                <Link isExternal href={link}>
+                  <Text as="u">Click here to view your transaction.</Text>
+                  <ExternalLinkIcon size="xs"/>
+                </Link>
+              ),
+              status: "success",
+              isClosable: true,
+              position: "bottom-right",
+              duration: null,
+            });
+            navigate(`../pools/${poolAddress}`);
+          } catch (error) {
+            toast({
+              title: "Error creating pool.",
+              description: (
+                <Link isExternal href={link}>
+                  <Text as="u">Click here to view your transaction.</Text>
+                  <ExternalLinkIcon size="xs"/>
+                </Link>
+              ),
+              status: "error",
+              isClosable: true,
+              position: "bottom-right",
+              duration: null,
+            });
+            setLoading(false);
+          }
         });
-        
-        // attachedContract.events.poolAddress().on("data", event => {
-        //   console.log(event);
-        // });
-        
-        // attachedContract.events.poolAddress({ fromBlock: 0, toBlock: "latest" }, (err, res) => {
-        //   console.log(err);
-        //   console.log(res);
-        // });
-        
-        
-        // console.log(result);
-        // 
-        // const poolContract = await state.harmony.client.contracts.createContract(PoolsABI, result);
-        // const attachedPoolContract = await state.walletConnector.attachToContract(poolContract);
-        // console.log(attachedPoolContract);
-        // const resultPool = await attachedPoolContract.methods.getNumOwners().call();
-        // console.log(resultPool);
-        
-        
-        // console.log(factoryInstance);
-        // factoryInstance.wallet.signTransaction = async (txn) => {
-        //   txn.from = state.walletAddress;
-        //   return await state.walletConnector.signTransaction(txn);
-        // };
-        // const result = await factoryInstance.methods.createPool(["one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry", "one1u8gppk3j7yrgeac36fgvqrg3cd9qn5rqcxfhzr"], 1, hash).call();
-        // console.log(result);
-        // console.log(await factoryInstance.methods.getInstantiations("one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry").call())
-        // 
-        // const poolsInstance = state.harmony.client.contracts.createContract(PoolsABI, "one1nsue0xkv0qwh7zrl093t7ngtuml3sfpy8leqqc");
-        // poolsInstance.wallet.signTransaction = async (txn) => {
-        //   txn.from = state.walletAddress;
-        //   return await state.walletConnector.signTransaction(txn);
-        // };
-        // console.log(poolsInstance)
-        // console.log(await poolsInstance.methods.getNumOwners().call());
       }).catch(error => {
-        console.log(error);
+        toast({
+          title: "Error creating pool. Please refresh the page and try again.",
+          status: "error",
+          isClosable: true,
+          position: "bottom-right",
+        });
+        setLoading(false);
       });
     }
+  }
+  
+  if (!state.walletAddress) {
+    return (
+      <Center h="90%">
+        <Text fontSize="lg">Connect into your {" "}
+          <Link fontSize="lg" href={Constants.HARMONY_CHROME_STORE_URL} isExternal textDecoration="underline">
+            Harmony Chrome Extension Wallet
+          </Link> to create a pool.
+        </Text>
+      </Center>
+    );
   }
   
   return (
@@ -158,10 +166,10 @@ Bibendum neque egestas congue quisque egestas diam in. Diam phasellus vestibulum
       </Steps>
       <Flex width="100%" justify="flex-end">
         <Button mr={4} size="sm" variant="ghost" 
-          onClick={prevStep} isDisabled={activeStep === 0}>
+          onClick={prevStep} isDisabled={activeStep === 0 || loading}>
           Prev
         </Button>
-        <Button mr={4} size="sm" variant="ghost" 
+        <Button mr={4} size="sm" variant="ghost" isLoading={loading} loadingText="Submitting"
           onClick={onClickNextStep} isDisabled={validateNextStep()}>
           { activeStep >= forms.length ? "Submit" : "Next" }
         </Button>

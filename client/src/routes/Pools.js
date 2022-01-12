@@ -18,9 +18,31 @@ import yup from "validations/validations";
 import * as Constants from "constants/Constants";
 import * as Utils from "utils/Utils";
 import moment from "moment";
+import PoolFactoryABI from "abi/PoolFactory";
+import PoolsABI from "abi/Pools";
 
 const MyPools = (props) => {
   let [ state, dispatch ] = [ useTrackedState(), useSetState() ];
+  
+  useEffect(() => {
+    
+  }, []);
+  
+  useEffect(() => {
+    (async () => {
+      // let pools = [];
+      // const client = state.harmony.client;
+      // const factoryContract = await client.contracts.createContract(PoolFactoryABI, Constants.POOLS_FACTORY_ADDRESS);
+      // console.log(factoryContract.methods);
+      // console.log(await factoryContract.methods.getInstantiations().call());
+      // (await factoryContract.methods.getInstantiations().call()).forEach(async (address) => {
+      //   const contract = await client.contracts.createContract(PoolsABI, Constants.POOLS_FACTORY_ADDRESS);
+      // 
+      // });
+      
+      
+    })();
+  }, [state.walletAddress]);
 
   return (
     <Stack>
@@ -31,6 +53,13 @@ const MyPools = (props) => {
             <Spacer/>
             <AccordionIcon/ >
           </AccordionButton>
+          <AccordionPanel>
+            <Flex>
+              {
+                
+              }
+            </Flex>
+          </AccordionPanel>
         </AccordionItem>
       </Accordion>
     </Stack>

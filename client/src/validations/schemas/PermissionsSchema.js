@@ -9,8 +9,9 @@ const PermissionsSchema = yup.object().shape({
     }),
     ).min(1, "A pool must have at least one owner or the funds would be unrecoverable.")
     .uniqueProperty("address", "Owner wallet addresses need to be unique."),
-  ownersForProposal: yup.number("Minimum owners for proposal must be a positive whole number")
+  ownersForProposal: yup.number("Minimum owners for proposal must be a positive whole number.")
     .min(1, "Minimum owners for proposal must be at least 1")
+    .integer("Minimum owners for proposal must be a positive whole number.")
     .test({
       name: "max",
       message: "Minimum owners for proposal must not be more than the total number of owners.",

@@ -16,7 +16,7 @@ import BigNumber from "bignumber.js";
 import BN from "bn.js";
 import * as Constants from "constants/Constants"; 
 
-const CreateProposalModal = ({ id, ownersForProposal, numOwners, isOpen, onClose }) => {
+const CreateProposalModal = ({ id, ownersForProposal, numOwners, isOpen, onClose, onSubmit }) => {
   const toast = useToast();
   let [ state, dispatch ] = [ useTrackedState(), useSetState() ];
   
@@ -25,10 +25,6 @@ const CreateProposalModal = ({ id, ownersForProposal, numOwners, isOpen, onClose
     resolver: yupResolver(CreateProposalSchema),
   });
   const { register, getValues, reset, formState: { errors } } = form;
-  
-  const onSubmit = async () => {
-    
-  }
   
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -60,7 +56,7 @@ const CreateProposalModal = ({ id, ownersForProposal, numOwners, isOpen, onClose
               <FormHelperText>Write the justification/description for this proposal.</FormHelperText>
             </FormControl>
             <Flex width="100%" justify="flex-end">
-              <Button size="sm" variant="ghost" onClick={form.handleSubmit(onSubmit)} mb="1rem">
+              <Button size="sm" variant="ghost" onClick={form.handleSubmit(onSubmit)}>
                 Submit
               </Button>
             </Flex>

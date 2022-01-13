@@ -3,7 +3,7 @@ export const EXPLORER_URL_ADDRESS = `${EXPLORER_URL_BASE}/address`;
 
 export const EXPLORER_POP_URL_BASE = "https://explorer.pops.one/tx";
 
-export const SERVER_URL_BASE = "http://Daniels-MacBook-Pro.local:4000";
+export const SERVER_URL_BASE = "http://localhost:4000";
 export const SERVER_URL_API = `${SERVER_URL_BASE}/api`;
 
 export const PINATA_URL_GATEWAY = "https://gateway.pinata.cloud/ipfs";

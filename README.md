@@ -15,6 +15,7 @@ Once the pool's information is filled, the creator will be given an option to ad
 ![](/pics/createpool2.png)
 
 Upon review and submit, the pool is then created and now can accept contributions, updates, proposals, comments, etc. 
+![](/pics/createpool3.gif)
 
 
 ## smart contract

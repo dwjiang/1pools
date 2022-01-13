@@ -27,18 +27,7 @@ const CreatePool = () => {
   const { nextStep, prevStep, reset, activeStep } = useSteps({ initialStep: 0 });
   
   const forms = [ 
-    useForm({ mode: "onBlur", resolver: yupResolver(GeneralInfoSchema),
-      defaultValues: {
-        name: "Secret Birthday Present for Jordan (Bike)",
-        description: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ultricies leo integer malesuada nunc vel risus. Odio ut sem nulla pharetra diam sit amet nisl suscipit. Sit amet mauris commodo quis imperdiet massa tincidunt nunc. Facilisi nullam vehicula ipsum a arcu cursus. Et molestie ac feugiat sed lectus. Non pulvinar neque laoreet suspendisse interdum consectetur libero id. Nisl nisi scelerisque eu ultrices vitae auctor. Turpis tincidunt id aliquet risus feugiat in ante. Fringilla phasellus faucibus scelerisque eleifend. Ornare arcu odio ut sem nulla pharetra diam. Volutpat sed cras ornare arcu.
-
-In metus vulputate eu scelerisque. Nunc sed augue lacus viverra vitae congue eu consequat. Pretium viverra suspendisse potenti nullam. Congue nisi vitae suscipit tellus mauris. Massa tempor nec feugiat nisl pretium. Sit amet massa vitae tortor condimentum lacinia quis vel. Neque volutpat ac tincidunt vitae semper quis. Senectus et netus et malesuada fames ac. Cursus euismod quis viverra nibh cras pulvinar. Dolor morbi non arcu risus quis varius quam. Tempor id eu nisl nunc mi ipsum. Ut venenatis tellus in metus vulputate eu scelerisque. Magna etiam tempor orci eu lobortis. Vitae purus faucibus ornare suspendisse sed nisi lacus sed.
-
-Bibendum neque egestas congue quisque egestas diam in. Diam phasellus vestibulum lorem sed. Facilisi cras fermentum odio eu. Massa sed elementum tempus egestas sed sed risus pretium. Laoreet id donec ultrices tincidunt. At augue eget arcu dictum varius. Et pharetra pharetra massa massa ultricies mi quis. Sollicitudin ac orci phasellus egestas tellus rutrum. Odio euismod lacinia at quis risus sed vulputate odio ut. Velit euismod in pellentesque massa placerat. Bibendum ut tristique et egestas quis ipsum suspendisse. Sed sed risus pretium quam vulputate dignissim suspendisse. Tortor pretium viverra suspendisse potenti. Amet mattis vulputate enim nulla aliquet porttitor lacus. Fringilla est ullamcorper eget nulla. Aliquam purus sit amet luctus venenatis lectus. Lorem dolor sed viverra ipsum nunc aliquet bibendum enim facilisis. Eget aliquet nibh praesent tristique magna sit. Elit sed vulputate mi sit amet mauris commodo quis. Amet mauris commodo quis imperdiet massa tincidunt nunc pulvinar sapien.`,
-        goal: 200,
-        end: 5,
-      },
-    }),
+    useForm({ mode: "onBlur", resolver: yupResolver(GeneralInfoSchema) }),
     useForm({ mode: "onBlur", resolver: yupResolver(PermissionsSchema),
       defaultValues: {
         owners: [{ address: state.walletAddress }],

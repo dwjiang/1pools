@@ -18,7 +18,7 @@ const Home = () => (
       <Center fontSize="lg"><strong>Getting Started</strong></Center>
       <Center>1. Connect your Harmony Wallet Chrome Extension.</Center>
       <Center>2. Go to&nbsp;"<Link href="create-pool" textDecoration="underline">Create Pool</Link>"&nbsp;page.</Center>
-      <Center>3. Enter the general information and owners for you pool.</Center>
+      <Center>3. Enter the general information and owners for your pool.</Center>
       <Center>4. Review your pool information and submit your pool.</Center>
       <Box h="4rem"/>
     </Stack>

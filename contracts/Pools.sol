@@ -105,6 +105,7 @@ contract Pools {
 		public payable
 		proposalExists(_proposalId)
 		ownerExists(msg.sender)
+		validPoolTimeWindow()
 	{
 		Proposal storage proposal = proposals[_proposalId];
 		if (proposal.numConfirmations[ProposalConfirmationTypes.YES] >= confirmationsRequired) {

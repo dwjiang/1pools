@@ -20,6 +20,7 @@ import * as Utils from "utils/Utils";
 import moment from "moment";
 import PoolsABI from "abi/Pools";
 import PoolFactoryABI from "abi/PoolFactory";
+import io from "socket.io-client";
 
 const Pool = (props) => {
   const toast = useToast();
@@ -32,6 +33,7 @@ const Pool = (props) => {
   let [ isCreateProposalModalOpen, setIsCreateProposalModalOpen ] = useState(false);
   let [ loading, setLoading ] = useState(true);
   let [ found, setFound ] = useState(true);
+  let [ socket, setSocket ] = useState(null);
 
   const location = useLocation();
   const { id } = useParams();
@@ -40,79 +42,30 @@ const Pool = (props) => {
     updates: useForm({ mode: "onSubmit", resolver: yupResolver(CommentsSchema)}),
     comments: useForm({ mode: "onSubmit", resolver: yupResolver(CommentsSchema)}),    
   };
-    
-  // fetch data here (temp data for now)
-  // blockchain:
-  //  fetch pool metadata
-  //  fetch pool transactions
-  //  fetch proposals
-  //  fetch pool creation date
-  // server:
-  //  fetch updates
-  //  fetch comments
+
   useEffect(() => {
-    
     Promise.all([fetchPoolMetadata(), fetchProposals(), fetchUpdates(), fetchComments()])
       .catch(error => setFound(false)).finally(() => setLoading(false));
-    
-    // (async () => {
-    //   try {
-    //     fetchPoolMetadata();
-    //     fetchProposals();
-    //     fetchUpdates();
-    //     fetchComments();
-    //   } catch (error) {
-    //     setFound(false);
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // })();
-    // setPoolMetadata({
-    //   goal: 345670,
-    //   end: 5,
-    //   creator: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
-    //   owners: [
-    //     "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
-    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
-    //     "one1klfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8lvolp",
-    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
-    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
-    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
-    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
-    //     "one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm",
-    //   ],
-    //   ownersForProposal: 2,
-    // });
-    // setProposals([
-    //   {
-    //     proposedBy: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
-    //     destination: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
-    //     amount: 12354,
-    //     executed: false,
-    //     data: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Et tortor at risus viverra adipiscing at in tellus integer. Pretium vulputate sapien nec sagittis aliquam malesuada bibendum. Odio eu feugiat pretium nibh ipsum consequat. Neque ornare aenean euismod elementum nisi.",
-    //     confirmations: {
-    //       one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm: 1,
-    //       one1klfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8lvolp: 2,
-    //     },
-    //     numConfirmations: {
-    //       0: 6, 1: 1, 2: 1, 3: 0
-    //     }
-    //   },
-    //   {
-    //     proposedBy: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
-    //     destination: "one1guspucjg2tjn7g9d4nkrq5l0gq9xmwqe65kvry",
-    //     amount: 12354,
-    //     executed: true,
-    //     data: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Et tortor at risus viverra adipiscing at in tellus integer. Pretium vulputate sapien nec sagittis aliquam malesuada bibendum. Odio eu feugiat pretium nibh ipsum consequat. Neque ornare aenean euismod elementum nisi.",
-    //     confirmations: {
-    //       one1alfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8laksm: 1,
-    //       one1klfiucjg2tjn7g9d4nkrq5ljgq9xmwqe8lvolp: 2,
-    //     },
-    //     numConfirmations: {
-    //       0: 6, 1: 1, 2: 1, 3: 0
-    //     }
-    //   }
-    // ]);
+    const query = new URLSearchParams({ id }).toString();
+    const socket = io(Constants.SERVER_URL_BASE, { query, reconnection: true });
+    socket.on("refresh", type => {
+      console.log(type);
+      switch (type) {
+        case "balance":
+          fetchBalance();
+          break;
+        case "comments":
+          fetchComments();
+          break;
+        case "updates":
+          fetchUpdates();
+          break;
+        case "proposals":
+          fetchProposals();
+          break;
+      }
+    });
+    setSocket(socket);
   }, []);
   
   const fetchPoolMetadata = async () => {
@@ -251,6 +204,7 @@ const Pool = (props) => {
       }).then(async (response) => {
         if (response.status !== 200 || !forms.updates.formState.isSubmitSuccessful)
           throw new Error();
+        socket.emit("refresh", "updates");
         fetchUpdates();
         forms.updates.reset({ content: "" });
       });
@@ -275,6 +229,7 @@ const Pool = (props) => {
           address: state.walletAddress,
         }
       }).then(response => {
+        socket.emit("refresh", "comments");
         fetchComments();
         if (response.status !== 200 || !forms.comments.formState.isSubmitSuccessful)
           throw new Error();
@@ -330,11 +285,22 @@ const Pool = (props) => {
       await attachedContract.methods.createProposal(data.address, data.amount, client.crypto.hexToByteArray(new Buffer(data.message).toString("hex"))).send({
         from: state.walletConnector.address
       }).on("receipt", receipt => {
-        console.log(receipt);
+        proposalOnUpdate();
+        setIsCreateProposalModalOpen(false);
       });
     } catch (error) {
-      console.log(error);
+      toast({
+        title: "Error submitting proposal",
+        status: "error",
+        isClosable: true,
+        position: "bottom-right",
+      });
     }
+  }
+  
+  const proposalOnUpdate = async () => {
+    socket.emit("refresh", "proposals");
+    fetchProposals();
   }
   
   if (loading) {
@@ -361,8 +327,6 @@ const Pool = (props) => {
     );
   }
   
-  console.log(poolMetadata);
-
   return (
     <SimpleGrid w="full" columns={[1, null, 3]} gap="2rem">
       <ContributeModal id={id} isOpen={isContributeModalOpen} onClose={()=>setIsContributeModalOpen(false)}/>
@@ -434,13 +398,13 @@ const Pool = (props) => {
                       </Stack> :
                       <Box>
                         <Center>
-                          { isAddressOwner(state.walletAddress) ? <Button mb="2rem">Submit New Proposal</Button> : "" }
+                          { isAddressOwner(state.walletAddress) ? <Button mb="2rem" onClick={()=>setIsCreateProposalModalOpen(true)}>Submit New Proposal</Button> : "" }
                         </Center>
                         <Stack spacing="2rem">
                           {
                             proposals.reverse().map((proposal, index) => 
-                              <ProposalsCard key={`proposal_${index}`} item={proposal} index={proposals.length - index} 
-                                ownersForProposal={poolMetadata?.ownersForProposal}/>
+                              <ProposalsCard key={`proposal_${index}`} id={id} item={proposal} index={proposals.length - index} 
+                                ownersForProposal={poolMetadata?.ownersForProposal} onUpdate={proposalOnUpdate} endsAt={poolMetadata?.endsAt}/>
                             )
                           }
                         </Stack>
@@ -502,7 +466,10 @@ const Pool = (props) => {
             <HStack mb="0.5rem">
               <CalendarIcon boxSize="1rem"/>
               <Text fontSize="sm">
-                { calculateDaysToEnd() } until this pool ends
+                { moment(poolMetadata?.endsAt).diff(moment(), "seconds") > 0 ?
+                  `${calculateDaysToEnd()} until this pool ends` :
+                  `Pool has ended`
+                }
               </Text>
             </HStack>
             <Text fontSize="sm" opacity="0.8">You can still contribute to the pool after the end date.</Text>

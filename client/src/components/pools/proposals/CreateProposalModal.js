@@ -19,12 +19,20 @@ import * as Constants from "constants/Constants";
 const CreateProposalModal = ({ id, ownersForProposal, numOwners, isOpen, onClose, onSubmit }) => {
   const toast = useToast();
   let [ state, dispatch ] = [ useTrackedState(), useSetState() ];
-  
+  let [ loading, setLoading ] = useState(false);
+
   const form = useForm({
     mode: "onBlur", 
     resolver: yupResolver(CreateProposalSchema),
   });
   const { register, getValues, reset, formState: { errors } } = form;
+  
+  const onProposalSubmit = async () => {
+    setLoading(true);
+    await form.handleSubmit(onSubmit)();
+    setLoading(false);
+    form.reset({});
+  }
   
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -56,7 +64,7 @@ const CreateProposalModal = ({ id, ownersForProposal, numOwners, isOpen, onClose
               <FormHelperText>Write the justification/description for this proposal.</FormHelperText>
             </FormControl>
             <Flex width="100%" justify="flex-end">
-              <Button size="sm" variant="ghost" onClick={form.handleSubmit(onSubmit)}>
+              <Button size="sm" variant="ghost" onClick={onProposalSubmit} isLoading={loading} loadingText="Submitting">
                 Submit
               </Button>
             </Flex>

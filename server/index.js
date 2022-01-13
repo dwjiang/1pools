@@ -3,6 +3,20 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const server = require("http").Server(app);
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "*",
+  }
+});
+
+io.on("connection", (socket) => {
+  const pool = socket.handshake.query.id;
+  socket.join(pool);
+  
+  socket.on("refresh", (type) => {
+    socket.to(pool).emit("refresh", type);
+  });
+});
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");

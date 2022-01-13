@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useState, useEffect, useRef } from "react";
 import { Box, Button, Center, CircularProgress, CircularProgressLabel, Container, Divider, Flex, FormControl, FormErrorMessage, FormHelperText, FormLabel, Grid, GridItem,
-  Heading, HStack, IconButton, Input, InputGroup, InputRightElement, Link, Progress, SimpleGrid, Spacer, Stack, Stat, StatLabel, StatNumber,
+  Heading, HStack, IconButton, Input, InputGroup, InputRightElement, Link, Progress, SimpleGrid, Spacer, Stack, Stat, StatLabel, StatNumber, Skeleton,
   Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Text, } from "@chakra-ui/react";
 import { CalendarIcon, CopyIcon, ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { ChainID, ChainType, hexToNumber, numberToHex, fromWei, Units, Unit } from "@harmony-js/utils";
@@ -22,47 +22,13 @@ import PoolFactoryABI from "abi/PoolFactory";
 import PoolsABI from "abi/Pools";
 
 const MyPools = (props) => {
-  let [ state, dispatch ] = [ useTrackedState(), useSetState() ];
-  
-  useEffect(() => {
-    
-  }, []);
-  
-  useEffect(() => {
-    (async () => {
-      // let pools = [];
-      // const client = state.harmony.client;
-      // const factoryContract = await client.contracts.createContract(PoolFactoryABI, Constants.POOLS_FACTORY_ADDRESS);
-      // console.log(factoryContract.methods);
-      // console.log(await factoryContract.methods.getInstantiations().call());
-      // (await factoryContract.methods.getInstantiations().call()).forEach(async (address) => {
-      //   const contract = await client.contracts.createContract(PoolsABI, Constants.POOLS_FACTORY_ADDRESS);
-      // 
-      // });
-      
-      
-    })();
-  }, [state.walletAddress]);
-
   return (
-    <Stack>
-      <Accordion>
-        <AccordionItem>
-          <AccordionButton>
-            <Text>My Pools</Text>
-            <Spacer/>
-            <AccordionIcon/ >
-          </AccordionButton>
-          <AccordionPanel>
-            <Flex>
-              {
-                
-              }
-            </Flex>
-          </AccordionPanel>
-        </AccordionItem>
-      </Accordion>
-    </Stack>
+    <Center h="90%">
+      <Stack>
+        <Center>WIP</Center>
+        <Center>This would be where your pools and any trending/popular pools would be listed.</Center>
+      </Stack>
+    </Center>
   );
 };
 

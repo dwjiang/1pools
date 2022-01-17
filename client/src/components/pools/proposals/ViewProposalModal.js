@@ -42,6 +42,8 @@ const ViewProposalModal = ({ id, item, index, ownersForProposal, isOpen, onClose
       const contract = await state.harmony.client.contracts.createContract(PoolsABI, id);
       const attachedContract = await state.walletConnector.attachToContract(contract);
       const result = await attachedContract.methods.setConfirmation(index - 1, vote).send({
+        gasPrice: state.harmony.gasPrice * 30,
+        gasLimit: state.harmony.gasLimit,
         from: state.walletConnector.address
       }).on("receipt", async (receipt) => {
         console.log(receipt);

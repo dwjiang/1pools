@@ -22,6 +22,8 @@ const ProposalsCard = ({ id, item, index, ownersForProposal, onUpdate, endsAt })
       const contract = await state.harmony.client.contracts.createContract(PoolsABI, id);      
       const attachedContract = await state.walletConnector.attachToContract(contract);
       const result = await attachedContract.methods.executeProposal(index).send({
+        gasPrice: state.harmony.gasPrice * 30,
+        gasLimit: state.harmony.gasLimit,
         from: state.walletConnector.address
       }).on("receipt", async (receipt) => {
         console.log(receipt);

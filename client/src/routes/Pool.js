@@ -283,7 +283,9 @@ const Pool = (props) => {
       const contract = await client.contracts.createContract(PoolsABI, id);
       const attachedContract = await state.walletConnector.attachToContract(contract);
       await attachedContract.methods.createProposal(data.address, data.amount, client.crypto.hexToByteArray(new Buffer(data.message).toString("hex"))).send({
-        from: state.walletConnector.address
+        from: state.walletConnector.address,
+        gasPrice: state.harmony.gasPrice * 30,
+        gasLimit: state.harmony.gasLimit,
       }).on("receipt", receipt => {
         proposalOnUpdate();
         setIsCreateProposalModalOpen(false);

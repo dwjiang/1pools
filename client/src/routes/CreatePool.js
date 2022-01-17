@@ -15,6 +15,7 @@ import yup from "validations/validations";
 import * as Constants from "constants/Constants";
 import PoolFactoryABI from "abi/PoolFactory";
 import { useNavigate } from "react-router-dom";
+import { Unit } from "@harmony-js/utils";
 
 const CreatePool = () => {
   const toast = useToast();
@@ -76,11 +77,15 @@ const CreatePool = () => {
 
         const contract = await state.harmony.client.contracts.createContract(PoolFactoryABI, Constants.POOLS_FACTORY_ADDRESS);
         const attachedContract = await state.walletConnector.attachToContract(contract);
+        console.log(state);
         const result = await attachedContract.methods.createPool(addresses, ownersForProposal, hash, ttl).send({
-          from: state.walletConnector.address
+          from: state.walletConnector.address,
+          gasPrice: state.harmony.gasPrice * 30,
+          gasLimit: state.harmony.gasLimit,
         }).on("receipt", async (receipt) => {
           const link = `${Constants.EXPLORER_POP_URL_BASE}/${receipt.transactionHash}`;
           try {
+            console.log(receipt);
             const poolAddress = state.harmony.client.crypto.toBech32(await contract.methods.getPool(state.walletConnector.address).call());
             if (poolAddress === "one1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqquzw7vz")
               throw new Error();
@@ -116,6 +121,7 @@ const CreatePool = () => {
           }
         });
       }).catch(error => {
+        console.log(error);
         toast({
           title: "Error creating pool. Please refresh the page and try again.",
           status: "error",

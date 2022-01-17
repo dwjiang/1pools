@@ -2,7 +2,7 @@
 By Daniel Jiang and Kelly Wang
 
 Checkout our live site at [1pools.xyz](http://www.1pools.xyz).<br/>
-View a sample pool [here](http://1pools.xyz/pools/one1mtmqm72l4yeugg00e4um7dh2cflptwgq8fhjz9) and our video demo [here](https://youtu.be/OSABNICJe24).<br/>
+View a sample pool [here](http://1pools.xyz/pools/one12harqnp3rtcwudphyf375af2vdzfg0rpnewe0w) and our video demo [here](https://youtu.be/OSABNICJe24).<br/>
 Smart Contract Address: [one12fj86y4duztz0hfrwyldnqr35tyf4tqckwgl66](https://explorer.pops.one/address/0x52647d12ade09627dd23713ed98071a2c89aac18) (on the Harmony One Testnet)
 
 ## What is it?
